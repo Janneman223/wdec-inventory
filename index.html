@@ -200,6 +200,14 @@
           </div>
           <div style="font-size:11px;color:var(--dim)" id="rev-direction"></div>
         </div>
+      </div>
+      <div id="rev-notes-wrap" style="display:none;margin-bottom:16px">
+        <div class="label mb8" style="color:var(--blue)">Delivery Notes → instructions field</div>
+        <textarea id="rev-notes" class="review-inp w-full" rows="3" style="resize:vertical;font-size:11px;line-height:1.6"
+          placeholder="ok at door, call ahead, access codes, DO NOT DELIVER…"
+          oninput="extracted.deliveryNotes=this.value"></textarea>
+      </div>
+      <div>
         <div class="label mb12">Line Items — Review &amp; Edit</div>
         <table style="margin-bottom:12px">
           <thead><tr><th>Print / Product ID</th><th>Description</th><th class="ta-r" id="rev-qty-hdr">Qty</th><th></th></tr></thead>
