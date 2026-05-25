@@ -82,16 +82,9 @@
 
 <div id="config-panel">
   <div style="max-width:500px">
-    <div class="label mb12">API Settings</div>
-    <div style="margin-bottom:16px">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Anthropic API Key</div>
-      <input class="inp-full" type="password" id="cfg-api-key" placeholder="sk-ant-..." />
-    </div>
-    <div style="display:flex;gap:10px;align-items:center">
-      <button class="btn-primary" onclick="saveConfig()">Save</button>
-      <button class="btn-ghost btn-sm" onclick="toggleConfig()">Close</button>
-      <span id="cfg-msg" style="font-size:11px;color:var(--muted)"></span>
-    </div>
+    <div class="label mb12">Settings</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">API key is managed securely via Cloudflare Worker.</div>
+    <button class="btn-ghost btn-sm" onclick="toggleConfig()">Close</button>
   </div>
 </div>
 
@@ -547,8 +540,9 @@ function computeInventory() {
 }
 
 // ── PDF Extraction ────────────────────────────────────────────────────────────
+const WORKER_URL = 'https://wdec-proxye.jannemanwdx.workers.dev/';
+
 async function extractPdf(b64) {
-  if (!cfg.apiKey) throw new Error('No API key configured. Open Settings and enter your Anthropic API key.');
   const prompt = `Extract data from this Earth Distributors warehouse document.
 
 Determine INBOUND vs OUTBOUND:
@@ -565,14 +559,9 @@ Extract:
 Return ONLY valid JSON, no markdown fences:
 {"type":"OUTBOUND","salesOrderNumber":"032514","date":"2026-05-01","shipTo":"Nicks Steak House","items":[{"productId":"HP-BAG-9CLM6-C","description":"Sugarcane Clamshell 9x6x3 200/cs","cases":6}]}`;
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch(WORKER_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': cfg.apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-calls': 'true'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1500,
