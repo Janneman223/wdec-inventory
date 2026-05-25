@@ -1090,10 +1090,9 @@ Also extract:
 3. date: date as YYYY-MM-DD
 4. shipTo: the Ship To or customer name
 
-Return ONLY valid JSON, no markdown fences. For Funding Innovations include deliveryNotes field:
-{"type":"OUTBOUND","salesOrderNumber":"FI-001234","date":"2026-05-01","shipTo":"Customer Name","deliveryNotes":"ok at door","items":[{"productId":"17-230","description":"Coastal Scene","cases":1}]}
-For Earth Distributors:
-{"type":"OUTBOUND","salesOrderNumber":"032514","date":"2026-05-01","shipTo":"Customer Name","items":[{"productId":"HP-BAG-9CLM6-C","description":"Sugarcane Clamshell 9x6x3","cases":6}]}`;
+CRITICAL: Return ONLY a raw JSON object. No explanation, no preamble, no markdown, no backticks. Start your response with { and end with }.
+Required fields: type, salesOrderNumber, date, shipTo, deliveryNotes (empty string if none), items (array of {productId, description, cases}).
+Example: {"type":"OUTBOUND","salesOrderNumber":"FI-001234","date":"2026-05-01","shipTo":"Customer Name","deliveryNotes":"ok at door","items":[{"productId":"17-230","description":"Coastal Scene","cases":1}]}`;
 
   const res = await fetch(WORKER_URL, {
     method: 'POST',
