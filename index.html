@@ -1089,10 +1089,10 @@ Also extract:
 2. salesOrderNumber: the SO, PO, or invoice number
 3. date: date as YYYY-MM-DD
 4. shipTo: the Ship To or customer name
+5. deliveryNotes: any delivery instructions from Notes section (empty string if none)
+6. items: array of objects with productId, description, cases
 
-CRITICAL: Return ONLY a raw JSON object. No explanation, no preamble, no markdown, no backticks. Start your response with { and end with }.
-Required fields: type, salesOrderNumber, date, shipTo, deliveryNotes (empty string if none), items (array of {productId, description, cases}).
-Example: {"type":"OUTBOUND","salesOrderNumber":"FI-001234","date":"2026-05-01","shipTo":"Customer Name","deliveryNotes":"ok at door","items":[{"productId":"17-230","description":"Coastal Scene","cases":1}]}`;
+RETURN ONLY VALID JSON. No markdown, no explanation, no text before or after. Output must be parseable by JSON.parse().`;
 
   const res = await fetch(WORKER_URL, {
     method: 'POST',
@@ -1100,20 +1100,45 @@ Example: {"type":"OUTBOUND","salesOrderNumber":"FI-001234","date":"2026-05-01","
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
-      messages: [{ role: 'user', content: [
-        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
-        { type: 'text', text: prompt }
-      ]}]
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
+            { type: 'text', text: prompt }
+          ]
+        },
+        {
+          role: 'assistant',
+          content: '{'
+        }
+      ]
     })
   });
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
-  const text = data.content?.find(b => b.type === 'text')?.text || '';
-  // Extract just the JSON object — ignore any text before or after
-  const jsonStart = text.indexOf('{');
-  const jsonEnd = text.lastIndexOf('}');
-  if (jsonStart === -1 || jsonEnd === -1) throw new Error('No JSON found in response');
-  return JSON.parse(text.slice(jsonStart, jsonEnd + 1));
+
+  // Collect all text blocks (same approach as WDC Import Agent)
+  const raw = (data.content || [])
+    .map(block => block.type === 'text' ? block.text : '')
+    .filter(Boolean)
+    .join('');
+
+  // We prefilled with '{' so the response continues from there
+  const fullJson = '{' + raw;
+
+  // Strip any markdown fences just in case
+  const clean = fullJson.replace(/```json|```/g, '').trim();
+
+  try {
+    return JSON.parse(clean);
+  } catch(e) {
+    // Fallback: extract between first { and last }
+    const start = clean.indexOf('{');
+    const end = clean.lastIndexOf('}');
+    if (start === -1 || end === -1) throw new Error('Could not parse response from AI');
+    return JSON.parse(clean.slice(start, end + 1));
+  }
 }
 
 function toBase64(file) {
