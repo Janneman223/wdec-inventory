@@ -16,7 +16,6 @@
   }
   body { background: var(--bg); color: var(--text); font-family: 'DM Mono', 'Courier New', monospace; min-height: 100vh; }
   ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--surface); } ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
-
   #header { border-bottom: 1px solid var(--border); padding: 0 32px; }
   #header-top { display: flex; align-items: center; justify-content: space-between; padding: 18px 0 12px; }
   #logo { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
@@ -28,21 +27,16 @@
   .tab:hover { color: #a8c5a0; }
   .tab.active { color: var(--green); border-bottom-color: var(--green); }
   #main { padding: 28px 32px; max-width: 1200px; margin: 0 auto; }
-
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; }
   .card-sm { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px 22px; }
   .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; }
   .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-
   .badge-in  { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); padding: 2px 8px; border-radius: 4px; font-size: 11px; letter-spacing: .08em; white-space: nowrap; }
-  .badge-out { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border);   padding: 2px 8px; border-radius: 4px; font-size: 11px; letter-spacing: .08em; white-space: nowrap; }
-
+  .badge-out { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); padding: 2px 8px; border-radius: 4px; font-size: 11px; letter-spacing: .08em; white-space: nowrap; }
   input, select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 13px; outline: none; }
   input:focus, select:focus { border-color: var(--green); }
-  input[type=number] { width: 80px; }
   .inp-full { width: 100%; }
-
   .btn-primary { background: var(--accent); color: #d4efd4; border: 1px solid #5a8a60; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; transition: background .2s; }
   .btn-primary:hover { background: #4a7a50; }
   .btn-ghost { background: none; border: 1px solid var(--border); color: #888; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 12px; transition: border-color .2s, color .2s; }
@@ -50,36 +44,28 @@
   .btn-danger { background: none; border: 1px solid var(--red-border); color: var(--red); padding: 5px 9px; border-radius: 4px; cursor: pointer; font-size: 11px; font-family: 'DM Mono', monospace; }
   .btn-danger:hover { background: var(--red-bg); }
   .btn-sm { padding: 6px 12px; font-size: 11px; }
-
   table { width: 100%; border-collapse: collapse; }
   th { text-align: left; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); }
   td { padding: 9px 12px; font-size: 12px; border-bottom: 1px solid #1e2130; vertical-align: middle; }
   tr:hover td { background: #1e2130; }
   .ta-r { text-align: right; }
-
   .drop-zone { border: 2px dashed var(--accent); border-radius: 12px; padding: 60px 40px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; }
   .drop-zone:hover, .drop-zone.drag { border-color: var(--green); background: #1a2a1f; }
-
   .label { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
   .flex { display: flex; align-items: center; gap: 10px; }
   .flex-between { display: flex; align-items: center; justify-content: space-between; }
-  .mb8 { margin-bottom: 8px; } .mb12 { margin-bottom: 12px; } .mb16 { margin-bottom: 16px; } .mb20 { margin-bottom: 20px; } .mb24 { margin-bottom: 24px; }
-  .text-green { color: var(--green); } .text-red { color: var(--red); } .text-muted { color: var(--muted); } .text-dim { color: var(--dim); }
+  .mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}.mb20{margin-bottom:20px}.mb24{margin-bottom:24px}
+  .text-green{color:var(--green)}.text-red{color:var(--red)}.text-muted{color:var(--muted)}.text-dim{color:var(--dim)}
   .big-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 36px; line-height: 1; }
-  .med-num { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; }
   .tag { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; }
-  .pill { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; font-size: 11px; }
   .stacks { display: flex; flex-direction: column; gap: 12px; }
   #sync-bar { font-size: 11px; color: var(--muted); padding: 6px 32px; background: #13151e; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
   #sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); display: inline-block; }
   #sync-dot.ok { background: var(--green); }
   #sync-dot.err { background: var(--red); }
-
   #config-panel { background: #13151e; border-bottom: 1px solid var(--border); padding: 20px 32px; display: none; }
   #config-panel.open { display: block; }
-
   .page { display: none; } .page.active { display: block; }
-
   .review-inp { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 5px 8px; border-radius: 4px; font-family: 'DM Mono', monospace; font-size: 11px; }
   .review-inp:focus { border-color: var(--green); outline: none; }
   .review-inp.w-full { width: 100%; }
@@ -90,33 +76,21 @@
 
 <div id="sync-bar">
   <span id="sync-dot"></span>
-  <span id="sync-msg">Not connected to OneDrive — configure API settings below</span>
+  <span id="sync-msg">Connecting to Firebase…</span>
   <button class="btn-ghost btn-sm" style="margin-left:auto;font-size:10px" onclick="toggleConfig()">⚙ Settings</button>
 </div>
 
 <div id="config-panel">
-  <div style="max-width:700px">
-    <div class="label mb12">Connection Settings</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-      <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Anthropic API Key</div>
-        <input class="inp-full" type="password" id="cfg-api-key" placeholder="sk-ant-..." />
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">OneDrive Data File URL <span style="color:var(--dim)">(SharePoint shared link)</span></div>
-        <input class="inp-full" id="cfg-file-url" placeholder="https://wdec.sharepoint.com/..." />
-      </div>
+  <div style="max-width:500px">
+    <div class="label mb12">API Settings</div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Anthropic API Key</div>
+      <input class="inp-full" type="password" id="cfg-api-key" placeholder="sk-ant-..." />
     </div>
     <div style="display:flex;gap:10px;align-items:center">
-      <button class="btn-primary" onclick="saveConfig()">Save &amp; Connect</button>
+      <button class="btn-primary" onclick="saveConfig()">Save</button>
       <button class="btn-ghost btn-sm" onclick="toggleConfig()">Close</button>
       <span id="cfg-msg" style="font-size:11px;color:var(--muted)"></span>
-    </div>
-    <div style="margin-top:14px;font-size:11px;color:var(--dim);line-height:1.7">
-      <strong style="color:var(--muted)">Setup:</strong> 1) Enter your Anthropic API key &nbsp;·&nbsp;
-      2) Create an empty <code style="color:var(--green)">wdec-inventory.json</code> file in a shared OneDrive/SharePoint folder &nbsp;·&nbsp;
-      3) Paste the SharePoint share link for that file above &nbsp;·&nbsp;
-      4) Save — all orders will sync to that file so every staff member sees the same data.
     </div>
   </div>
 </div>
@@ -142,13 +116,13 @@
 
   <!-- DASHBOARD -->
   <div id="page-dashboard" class="page active">
-    <div class="grid-4" id="stat-grid">
+    <div class="grid-4">
       <div class="stat-card"><div class="label">Total SKUs</div><div class="big-num" id="s-skus">—</div><div class="text-dim" style="font-size:11px;margin-top:4px">product codes</div></div>
       <div class="stat-card"><div class="label">Cases On Hand</div><div class="big-num" id="s-cases">—</div><div class="text-dim" style="font-size:11px;margin-top:4px">current total</div></div>
       <div class="stat-card"><div class="label">Inbound Orders</div><div class="big-num text-green" id="s-in">—</div><div class="text-dim" style="font-size:11px;margin-top:4px">purchase orders</div></div>
       <div class="stat-card"><div class="label">Outbound Orders</div><div class="big-num text-red" id="s-out">—</div><div class="text-dim" style="font-size:11px;margin-top:4px">invoices shipped</div></div>
     </div>
-    <div class="grid-2">
+    <div class="grid-2" style="margin-top:28px">
       <div class="card">
         <div class="label mb16">Recent Orders</div>
         <div id="dash-orders"><span class="text-dim" style="font-size:13px">No orders yet.</span></div>
@@ -164,9 +138,8 @@
   <!-- UPLOAD -->
   <div id="page-upload" class="page" style="max-width:720px">
     <div class="label mb20">Upload Invoice or Purchase Order PDF</div>
-
     <div id="upload-idle">
-      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+      <div class="drop-zone" onclick="document.getElementById('file-input').click()"
         ondragover="event.preventDefault();this.classList.add('drag')"
         ondragleave="this.classList.remove('drag')"
         ondrop="event.preventDefault();this.classList.remove('drag');handleFile(event.dataTransfer.files[0])">
@@ -176,14 +149,12 @@
         <div style="font-size:11px;color:var(--dim)">Invoices (outbound) and Purchase Orders (inbound) both supported</div>
       </div>
     </div>
-
     <div id="upload-processing" style="display:none">
       <div class="card" style="text-align:center;padding:60px">
         <div class="label" style="color:var(--green)">Extracting document data…</div>
         <div class="text-muted" style="font-size:12px;margin-top:8px">Reading product codes, quantities, and order details</div>
       </div>
     </div>
-
     <div id="upload-review" style="display:none">
       <div class="card mb20">
         <div class="flex-between mb20">
@@ -197,7 +168,7 @@
           <div style="font-size:11px;color:var(--dim)" id="rev-direction"></div>
         </div>
         <div class="label mb12">Line Items — Review &amp; Edit</div>
-        <table id="rev-table" style="margin-bottom:12px">
+        <table style="margin-bottom:12px">
           <thead><tr><th>Product ID</th><th>Description</th><th class="ta-r">Cases</th><th></th></tr></thead>
           <tbody id="rev-tbody"></tbody>
         </table>
@@ -208,7 +179,6 @@
         <button class="btn-ghost" onclick="resetUpload()">Cancel</button>
       </div>
     </div>
-
     <div id="upload-done" style="display:none">
       <div class="card" style="text-align:center;padding:48px">
         <div style="font-size:28px;margin-bottom:12px">✓</div>
@@ -216,7 +186,6 @@
         <button class="btn-primary" onclick="resetUpload()">Upload Another</button>
       </div>
     </div>
-
     <div id="upload-error" style="display:none">
       <div class="card mb16" style="border-color:var(--red-border)">
         <div class="text-red mb8" style="font-size:13px">⚠ Extraction failed</div>
@@ -273,6 +242,35 @@
   </div>
 
 </div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBOk52pIMpL-SS-WhQ3CeXObKIH-YcMNgA",
+  authDomain: "wdec-inventory.firebaseapp.com",
+  projectId: "wdec-inventory",
+  storageBucket: "wdec-inventory.firebasestorage.app",
+  messagingSenderId: "778191764001",
+  appId: "1:778191764001:web:3b409c58eff21d29f24160"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// Expose DB functions to global scope
+window._fbAddOrder = async (order) => {
+  await addDoc(collection(db, "orders"), order);
+};
+
+window._fbLoadOrders = async () => {
+  const q = query(collection(db, "orders"), orderBy("date", "desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ ...d.data(), _docId: d.id }));
+};
+</script>
 
 <script>
 // ── Opening Inventory May 1 2026 ─────────────────────────────────────────────
@@ -483,66 +481,47 @@ const OPENING = [
   {code:"W-HC-8-CA",name:"Paper Hot Cups w/compostable lining 8oz 1000/cs",soh:8},
 ];
 
-// ── State ────────────────────────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────────────────────
 let orders = [];
 let extracted = null;
 let editItems = [];
-let cfg = { apiKey: '', fileUrl: '' };
+let cfg = { apiKey: '' };
 
-// ── Config ───────────────────────────────────────────────────────────────────
+// ── Config ────────────────────────────────────────────────────────────────────
 function loadConfig() {
   try { cfg = JSON.parse(localStorage.getItem('wdec_cfg') || '{}'); } catch {}
   if (cfg.apiKey) document.getElementById('cfg-api-key').value = cfg.apiKey;
-  if (cfg.fileUrl) document.getElementById('cfg-file-url').value = cfg.fileUrl;
 }
 function saveConfig() {
-  cfg.apiKey  = document.getElementById('cfg-api-key').value.trim();
-  cfg.fileUrl = document.getElementById('cfg-file-url').value.trim();
+  cfg.apiKey = document.getElementById('cfg-api-key').value.trim();
   localStorage.setItem('wdec_cfg', JSON.stringify(cfg));
-  document.getElementById('cfg-msg').textContent = 'Saved. Connecting…';
-  loadData();
+  document.getElementById('cfg-msg').textContent = 'Saved.';
+  setTimeout(() => document.getElementById('cfg-msg').textContent = '', 2000);
 }
 function toggleConfig() {
   document.getElementById('config-panel').classList.toggle('open');
 }
 
-// ── OneDrive sync ─────────────────────────────────────────────────────────────
-const WRITE_URL = '';
-
+// ── Firebase data ─────────────────────────────────────────────────────────────
 async function loadData() {
-  if (!cfg.fileUrl) { setSyncStatus('err', 'No file URL configured — enter it in Settings'); loadLocalFallback(); return; }
-  setSyncStatus('', 'Loading…');
+  setSyncStatus('', 'Loading from Firebase…');
   try {
-    const res = await fetch(cfg.fileUrl);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    orders = text.trim() ? JSON.parse(text) : [];
-    setSyncStatus('ok', 'Synced — ' + orders.length + ' orders loaded');
+    orders = await window._fbLoadOrders();
+    setSyncStatus('ok', 'Connected to Firebase — ' + orders.length + ' orders loaded');
     renderAll();
-  } catch (e) {
-    loadLocalFallback();
-    setSyncStatus('err', 'OneDrive unavailable — using local cache (' + orders.length + ' orders). Error: ' + e.message);
+  } catch(e) {
+    setSyncStatus('err', 'Firebase error: ' + e.message);
   }
 }
 
-function loadLocalFallback() {
-  try { const local = localStorage.getItem('wdec_orders_v1'); orders = local ? JSON.parse(local) : []; } catch { orders = []; }
-  renderAll();
-}
-
-async function saveData() {
-  localStorage.setItem('wdec_orders_v1', JSON.stringify(orders));
-  if (!WRITE_URL) {
-    setSyncStatus('ok', 'Saved locally (' + orders.length + ' orders) — OneDrive write endpoint not yet configured');
-    return;
-  }
+async function saveData(order) {
   try {
-    setSyncStatus('', 'Saving to OneDrive…');
-    const res = await fetch(WRITE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orders }) });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    setSyncStatus('ok', 'Saved to OneDrive — ' + orders.length + ' orders');
-  } catch (e) {
-    setSyncStatus('err', 'OneDrive save failed — data saved locally only. ' + e.message);
+    setSyncStatus('', 'Saving…');
+    await window._fbAddOrder(order);
+    setSyncStatus('ok', 'Saved to Firebase');
+  } catch(e) {
+    setSyncStatus('err', 'Save failed: ' + e.message);
+    throw e;
   }
 }
 
@@ -556,8 +535,7 @@ function setSyncStatus(state, msg) {
 function computeInventory() {
   const inv = {};
   OPENING.forEach(p => { inv[p.code] = { ...p, current: p.soh, totalIn: 0, totalOut: 0 }; });
-  const sorted = [...orders].sort((a,b) => a.date.localeCompare(b.date));
-  sorted.forEach(order => {
+  [...orders].sort((a,b) => a.date.localeCompare(b.date)).forEach(order => {
     order.items.forEach(item => {
       const k = item.productId;
       if (!inv[k]) inv[k] = { code: k, name: item.description, soh: 0, current: 0, totalIn: 0, totalOut: 0 };
@@ -579,8 +557,8 @@ Determine INBOUND vs OUTBOUND:
 
 Extract:
 1. type: "INBOUND" or "OUTBOUND"
-2. salesOrderNumber: the P.O. # number (digits only, e.g. "032514")
-3. date: Ship Date as YYYY-MM-DD (e.g. "26-05-01" → "2026-05-01")
+2. salesOrderNumber: the SO or PO number (digits only)
+3. date: Ship Date as YYYY-MM-DD
 4. shipTo: the Ship To company name
 5. items: array of {productId, description, cases} where cases is integer quantity
 
@@ -648,9 +626,9 @@ function showUploadState(state) {
 function resetUpload() { extracted = null; editItems = []; showUploadState('idle'); }
 
 function renderReview() {
-  const badgeEl = document.getElementById('rev-badge');
-  badgeEl.className = extracted.type === 'INBOUND' ? 'badge-in' : 'badge-out';
-  badgeEl.textContent = extracted.type;
+  const badge = document.getElementById('rev-badge');
+  badge.className = extracted.type === 'INBOUND' ? 'badge-in' : 'badge-out';
+  badge.textContent = extracted.type;
   document.getElementById('rev-so').textContent = 'SO# ' + extracted.salesOrderNumber;
   document.getElementById('rev-meta').textContent = extracted.date + ' · ' + extracted.shipTo;
   document.getElementById('rev-direction').textContent = extracted.type === 'INBOUND' ? 'Stock coming IN' : 'Stock going OUT';
@@ -658,8 +636,7 @@ function renderReview() {
 }
 
 function renderReviewItems() {
-  const tb = document.getElementById('rev-tbody');
-  tb.innerHTML = editItems.map((it,i) => `
+  document.getElementById('rev-tbody').innerHTML = editItems.map((it,i) => `
     <tr>
       <td><input class="review-inp" style="width:140px" value="${esc(it.productId)}" onchange="editItems[${i}].productId=this.value" /></td>
       <td><input class="review-inp w-full" value="${esc(it.description)}" onchange="editItems[${i}].description=this.value" /></td>
@@ -673,18 +650,19 @@ function addReviewLine() { editItems.push({productId:'',description:'',cases:0})
 
 async function confirmOrder() {
   const order = { ...extracted, items: [...editItems], id: Date.now().toString() };
-  orders.push(order);
-  await saveData();
-  renderAll();
-  showUploadState('done');
+  try {
+    await saveData(order);
+    orders.unshift(order);
+    renderAll();
+    showUploadState('done');
+  } catch(e) {
+    showUploadState('error');
+    document.getElementById('upload-err-msg').textContent = 'Failed to save: ' + e.message;
+  }
 }
 
-// ── Render functions ──────────────────────────────────────────────────────────
-function renderAll() {
-  renderDashboard();
-  renderInventory();
-  renderHistory();
-}
+// ── Render ────────────────────────────────────────────────────────────────────
+function renderAll() { renderDashboard(); renderInventory(); renderHistory(); }
 
 function renderDashboard() {
   const inv = computeInventory();
@@ -693,13 +671,11 @@ function renderDashboard() {
   document.getElementById('s-cases').textContent = vals.reduce((s,p) => s + Math.max(0,p.current), 0);
   document.getElementById('s-in').textContent = orders.filter(o=>o.type==='INBOUND').length;
   document.getElementById('s-out').textContent = orders.filter(o=>o.type==='OUTBOUND').length;
-
   const recent = [...orders].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8);
   document.getElementById('dash-orders').innerHTML = recent.length ? `
     <table><thead><tr><th>Date</th><th>SO#</th><th>Type</th><th>Lines</th></tr></thead><tbody>
     ${recent.map(o=>`<tr><td class="text-muted">${o.date}</td><td>${o.salesOrderNumber}</td><td><span class="${o.type==='INBOUND'?'badge-in':'badge-out'}">${o.type}</span></td><td class="text-muted">${o.items.length}</td></tr>`).join('')}
     </tbody></table>` : '<span class="text-dim" style="font-size:13px">No orders yet.</span>';
-
   renderDashSearch();
 }
 
@@ -763,7 +739,7 @@ function renderHistory() {
 function clearHistFilter() {
   document.getElementById('hist-type').value = 'all';
   document.getElementById('hist-from').value = '';
-  document.getElementById('hist-to').value   = '';
+  document.getElementById('hist-to').value = '';
   renderHistory();
 }
 
@@ -773,12 +749,10 @@ function renderSearch() {
   const field = document.getElementById('srch-field').value;
   const el = document.getElementById('srch-results');
   if (!q) { el.innerHTML = '<div class="text-dim" style="font-size:13px">Enter a search term above.</div>'; return; }
-
   const matchProds = (field==='all'||field==='product')
     ? Object.values(inv).filter(p=>p.code.toLowerCase().includes(q)||p.name.toLowerCase().includes(q)) : [];
   const matchOrders = (field==='all'||field==='order')
     ? orders.filter(o=>o.salesOrderNumber?.toLowerCase().includes(q)||o.shipTo?.toLowerCase().includes(q)||o.date?.includes(q)||o.items?.some(i=>i.productId.toLowerCase().includes(q)||i.description.toLowerCase().includes(q))) : [];
-
   let html = '';
   if (matchProds.length) {
     html += `<div class="label mb12">Products (${matchProds.length})</div>
@@ -810,10 +784,9 @@ function showTab(id, evt) {
   if (evt && evt.target) evt.target.classList.add('active');
   if (id==='inventory') renderInventory();
   if (id==='history') renderHistory();
-  if (id==='search') { document.getElementById('srch-input').focus(); }
+  if (id==='search') document.getElementById('srch-input').focus();
 }
 
-// ── Utils ─────────────────────────────────────────────────────────────────────
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -824,7 +797,9 @@ document.getElementById('header-date').innerHTML =
   '<div style="color:#3a5a40">Opening: May 1, 2026</div>';
 loadConfig();
 showUploadState('idle');
-loadData();
+
+// Wait for Firebase module to initialize then load data
+setTimeout(loadData, 800);
 </script>
 </body>
 </html>
