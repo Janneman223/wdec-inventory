@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WDEC · Earth Distributors Inventory</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@700;800&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3a;
+    --text: #e8e4dc; --muted: #666; --dim: #444;
+    --green: #7ec87e; --green-bg: #1a3a1f; --green-border: #3a6a3f;
+    --red: #e87e7e; --red-bg: #3a1a1a; --red-border: #6a3a3a;
+    --accent: #3a5a40;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Mono', 'Courier New', monospace; min-height: 100vh; }
+  ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--surface); } ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+  #header { border-bottom: 1px solid var(--border); padding: 0 32px; }
+  #header-top { display: flex; align-items: center; justify-content: space-between; padding: 18px 0 12px; }
+  #logo { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
+  #logo span { color: var(--green); }
+  #sub { font-size: 10px; color: var(--muted); letter-spacing: .15em; margin-top: 2px; }
+  #header-date { font-size: 11px; color: var(--muted); text-align: right; }
+  #tabs { display: flex; gap: 4px; }
+  .tab { background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; padding: 10px 18px; font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); transition: color .2s, border-color .2s; }
+  .tab:hover { color: #a8c5a0; }
+  .tab.active { color: var(--green); border-bottom-color: var(--green); }
+  #main { padding: 28px 32px; max-width: 1200px; margin: 0 auto; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; }
+  .card-sm { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px 22px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  .badge-in  { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); padding: 2px 8px; border-radius: 4px; font-size: 11px; letter-spacing: .08em; white-space: nowrap; }
+  .badge-out { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border);   padding: 2px 8px; border-radius: 4px; font-size: 11px; letter-spacing: .08em; white-space: nowrap; }
+
+  input, select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 13px; outline: none; }
+  input:focus, select:focus { border-color: var(--green); }
+  input[type=number] { width: 80px; }
+  .inp-full { width: 100%; }
+
+  .btn-primary { background: var(--accent); color: #d4efd4; border: 1px solid #5a8a60; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; transition: background .2s; }
+  .btn-primary:hover { background: #4a7a50; }
+  .btn-ghost { background: none; border: 1px solid var(--border); color: #888; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 12px; transition: border-color .2s, color .2s; }
+  .btn-ghost:hover { border-color: var(--green); color: var(--green); }
+  .btn-danger { background: none; border: 1px solid var(--red-border); color: var(--red); padding: 5px 9px; border-radius: 4px; cursor: pointer; font-size: 11px; font-family: 'DM Mono', monospace; }
+  .btn-danger:hover { background: var(--red-bg); }
+  .btn-sm { padding: 6px 12px; font-size: 11px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  td { padding: 9px 12px; font-size: 12px; border-bottom: 1px solid #1e2130; vertical-align: middle; }
+  tr:hover td { background: #1e2130; }
+  .ta-r { text-align: right; }
+
+  .drop-zone { border: 2px dashed var(--accent); border-radius: 12px; padding: 60px 40px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; }
+  .drop-zone:hover, .drop-zone.drag { border-color: var(--green); background: #1a2a1f; }
+
+  .label { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .flex { display: flex; align-items: center; gap: 10px; }
+  .flex-between { display: flex; align-items: center; justify-content: space-between; }
+  .mb8 { margin-bottom: 8px; } .mb12 { margin-bottom: 12px; } .mb16 { margin-bottom: 16px; } .mb20 { margin-bottom: 20px; } .mb24 { margin-bottom: 24px; }
+  .text-green { color: var(--green); } .text-red { color: var(--red); } .text-muted { color: var(--muted); } .text-dim { color: var(--dim); }
+  .big-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 36px; line-height: 1; }
+  .med-num { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; }
+  .tag { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; }
+  .pill { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; font-size: 11px; }
+  .stacks { display: flex; flex-direction: column; gap: 12px; }
+  #sync-bar { font-size: 11px; color: var(--muted); padding: 6px 32px; background: #13151e; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  #sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); display: inline-block; }
+  #sync-dot.ok { background: var(--green); }
+  #sync-dot.err { background: var(--red); }
+
+  #config-panel { background: #13151e; border-bottom: 1px solid var(--border); padding: 20px 32px; display: none; }
+  #config-panel.open { display: block; }
+
+  .page { display: none; } .page.active { display: block; }
+
+  .review-inp { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 5px 8px; border-radius: 4px; font-family: 'DM Mono', monospace; font-size: 11px; }
+  .review-inp:focus { border-color: var(--green); outline: none; }
+  .review-inp.w-full { width: 100%; }
+  .review-inp.w-cases { width: 70px; }
+</style>
+</head>
+<body>
+
+<div id="sync-bar">
+  <span id="sync-dot"></span>
+  <span id="sync-msg">Not connected to OneDrive — configure API settings below</span>
+  <button class="btn-ghost btn-sm" style="margin-left:auto;font-size:10px" onclick="toggleConfig()">⚙ Settings</button>
+</div>
+
+<div id="config-panel">
+  <div style="max-width:700px">
+    <div class="label mb12">Connection Settings</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Anthropic API Key</div>
+        <input class="inp-full" type="password" id="cfg-api-key" placeholder="sk-ant-..." />
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">OneDrive Data File URL <span style="color:var(--dim)">(SharePoint shared link)</span></div>
+        <input class="inp-full" id="cfg-file-url" placeholder="https://wdec.sharepoint.com/..." />
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="btn-primary" onclick="saveConfig()">Save &amp; Connect</button>
+      <button class="btn-ghost btn-sm" onclick="toggleConfig()">Close</button>
+      <span id="cfg-msg" style="font-size:11px;color:var(--muted)"></span>
+    </div>
+    <div style="margin-top:14px;font-size:11px;color:var(--dim);line-height:1.7">
+      <strong style="color:var(--muted)">Setup:</strong> 1) Enter your Anthropic API key &nbsp;·&nbsp;
+      2) Create an empty <code style="color:var(--green)">wdec-inventory.json</code> file in a shared OneDrive/SharePoint folder &nbsp;·&nbsp;
+      3) Paste the SharePoint share link for that file above &nbsp;·&nbsp;
+      4) Save — all orders will sync to that file so every staff member sees the same data.
+    </div>
+  </div>
+</div>
+
+<div id="header">
+  <div id="header-top">
+    <div>
+      <div id="logo"><span>WDEC</span> / Inventory</div>
+      <div id="sub">Earth Distributors · Warehouse Tracker</div>
+    </div>
+    <div id="header-date"></div>
+  </div>
+  <div id="tabs">
+    <button class="tab active" onclick="showTab('dashboard',event)">Dashboard</button>
+    <button class="tab" onclick="showTab('upload',event)">Upload PDF</button>
+    <button class="tab" onclick="showTab('inventory',event)">Inventory</button>
+    <button class="tab" onclick="showTab('history',event)">Order History</button>
+    <button class="tab" onclick="showTab('search',event)">Search</button>
+  </div>
+</div>
+
+<div id="main">
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <div class="grid-4" id="stat-grid">
+      <div class="stat-card"><div class="label">Total SKUs</div><div class="big-num" id="s-skus">—</div><div class="text-dim" style="font-size:11px;margin-top:4px">product codes</div></div>
+      <div class="stat-card"><div class="label">Cases On Hand</div><div class="big-num" id="s-cases">—</div><div class="text-dim" style="font-size:11px;margin-top:4px">current total</div></div>
+      <div class="stat-card"><div class="label">Inbound Orders</div><div class="big-num text-green" id="s-in">—</div><div class="text-dim" style="font-size:11px;margin-top:4px">purchase orders</div></div>
+      <div class="stat-card"><div class="label">Outbound Orders</div><div class="big-num text-red" id="s-out">—</div><div class="text-dim" style="font-size:11px;margin-top:4px">invoices shipped</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="label mb16">Recent Orders</div>
+        <div id="dash-orders"><span class="text-dim" style="font-size:13px">No orders yet.</span></div>
+      </div>
+      <div class="card">
+        <div class="label mb12">Quick Inventory Lookup</div>
+        <input class="inp-full mb12" id="dash-search" placeholder="Search product code or name…" oninput="renderDashSearch()" />
+        <div id="dash-inv-list" style="max-height:280px;overflow-y:auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div id="page-upload" class="page" style="max-width:720px">
+    <div class="label mb20">Upload Invoice or Purchase Order PDF</div>
+
+    <div id="upload-idle">
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+        ondragover="event.preventDefault();this.classList.add('drag')"
+        ondragleave="this.classList.remove('drag')"
+        ondrop="event.preventDefault();this.classList.remove('drag');handleFile(event.dataTransfer.files[0])">
+        <input type="file" id="file-input" accept="application/pdf" style="display:none" onchange="handleFile(this.files[0])" />
+        <div style="font-size:32px;margin-bottom:12px">📄</div>
+        <div style="font-size:14px;color:var(--muted);margin-bottom:6px">Drop a PDF here or click to browse</div>
+        <div style="font-size:11px;color:var(--dim)">Invoices (outbound) and Purchase Orders (inbound) both supported</div>
+      </div>
+    </div>
+
+    <div id="upload-processing" style="display:none">
+      <div class="card" style="text-align:center;padding:60px">
+        <div class="label" style="color:var(--green)">Extracting document data…</div>
+        <div class="text-muted" style="font-size:12px;margin-top:8px">Reading product codes, quantities, and order details</div>
+      </div>
+    </div>
+
+    <div id="upload-review" style="display:none">
+      <div class="card mb20">
+        <div class="flex-between mb20">
+          <div>
+            <div class="flex mb8">
+              <span id="rev-badge"></span>
+              <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px" id="rev-so"></span>
+            </div>
+            <div style="font-size:12px;color:var(--muted)" id="rev-meta"></div>
+          </div>
+          <div style="font-size:11px;color:var(--dim)" id="rev-direction"></div>
+        </div>
+        <div class="label mb12">Line Items — Review &amp; Edit</div>
+        <table id="rev-table" style="margin-bottom:12px">
+          <thead><tr><th>Product ID</th><th>Description</th><th class="ta-r">Cases</th><th></th></tr></thead>
+          <tbody id="rev-tbody"></tbody>
+        </table>
+        <button class="btn-ghost btn-sm" onclick="addReviewLine()">+ Add Line</button>
+      </div>
+      <div style="display:flex;gap:12px">
+        <button class="btn-primary" onclick="confirmOrder()">Confirm &amp; Save Order</button>
+        <button class="btn-ghost" onclick="resetUpload()">Cancel</button>
+      </div>
+    </div>
+
+    <div id="upload-done" style="display:none">
+      <div class="card" style="text-align:center;padding:48px">
+        <div style="font-size:28px;margin-bottom:12px">✓</div>
+        <div class="text-green mb16" style="font-size:14px">Order saved — inventory updated</div>
+        <button class="btn-primary" onclick="resetUpload()">Upload Another</button>
+      </div>
+    </div>
+
+    <div id="upload-error" style="display:none">
+      <div class="card mb16" style="border-color:var(--red-border)">
+        <div class="text-red mb8" style="font-size:13px">⚠ Extraction failed</div>
+        <div class="text-muted" style="font-size:12px" id="upload-err-msg"></div>
+      </div>
+      <button class="btn-ghost" onclick="resetUpload()">Try Again</button>
+    </div>
+  </div>
+
+  <!-- INVENTORY -->
+  <div id="page-inventory" class="page">
+    <div class="flex mb20" style="gap:12px">
+      <input style="max-width:340px" id="inv-search" placeholder="Filter by code or name…" oninput="renderInventory()" />
+      <div class="text-muted" style="font-size:11px;margin-left:auto" id="inv-count"></div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Product Code</th><th>Description</th><th class="ta-r">Opening May 1</th><th class="ta-r">In</th><th class="ta-r">Out</th><th class="ta-r">On Hand</th></tr></thead>
+          <tbody id="inv-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="page-history" class="page">
+    <div class="flex mb20" style="gap:12px;flex-wrap:wrap">
+      <select id="hist-type" onchange="renderHistory()">
+        <option value="all">All Types</option>
+        <option value="INBOUND">Inbound (PO)</option>
+        <option value="OUTBOUND">Outbound (Invoice)</option>
+      </select>
+      <input type="date" id="hist-from" onchange="renderHistory()" />
+      <span class="text-muted" style="font-size:12px">to</span>
+      <input type="date" id="hist-to" onchange="renderHistory()" />
+      <button class="btn-ghost btn-sm" onclick="clearHistFilter()">Clear</button>
+      <div class="text-muted" style="font-size:11px;margin-left:auto" id="hist-count"></div>
+    </div>
+    <div class="stacks" id="hist-list"></div>
+  </div>
+
+  <!-- SEARCH -->
+  <div id="page-search" class="page">
+    <div class="flex mb24" style="gap:12px">
+      <input style="max-width:420px" id="srch-input" placeholder="Search SO#, product code, date, customer…" oninput="renderSearch()" />
+      <select id="srch-field" onchange="renderSearch()">
+        <option value="all">All</option>
+        <option value="order">Orders only</option>
+        <option value="product">Products only</option>
+      </select>
+    </div>
+    <div id="srch-results"><div class="text-dim" style="font-size:13px">Enter a search term above.</div></div>
+  </div>
+
+</div>
+
+<script>
+// ── Opening Inventory May 1 2026 ─────────────────────────────────────────────
+const OPENING = [
+  {code:"595-10025",name:'#25 Natural Kraft Tray 4.25" x 3.25" x 1.25" (Base 3" x 1.75") 1000/cs',soh:1},
+  {code:"7153",name:"#300 Natural Kraft Tray 500/cs",soh:27},
+  {code:"7155",name:"#500 Natural Kraft Tray 500/cs",soh:39},
+  {code:"80-414C-CASE",name:'Wood Stir Sticks 7" CASE 10 boxes x 1000/box',soh:4},
+  {code:"AS-BB-R-M",name:"Assorted Bamboo Utensils Retail Pack Master Case 4 cases x 12 packs x 24 pieces per pack",soh:12},
+  {code:"AS-PS-FKN",name:"Cutlery Wrapped Set (knife, fork, napkin) 500/cs",soh:15},
+  {code:"AS-PS-TN",name:"Cutlery Wrapped Set (knife, fork, spoon, napkin) 250/cs",soh:1},
+  {code:"BB-SC-U16",name:"Sugarcane/Wheat Straw Barrel Bowl 16oz 500/cs",soh:1},
+  {code:"BB-SC-U8-LFS",name:"Sugarcane/Wheat Straw Barrel Bowl 8oz 500/cs",soh:5},
+  {code:"BBL-SC-U12",name:"Sugarcane/Wheat Straw Barrel Bowl Lid for 8/12/16oz, 500/cs",soh:3},
+  {code:"BGRT-CS-13-M",name:"13 Gallon Compost Waste Bag (RETAIL) 4 x 12 packs x 12 bags per pack 576/cs",soh:6},
+  {code:"BGRT-CS-3-M",name:"3 Gallon Compost Waste Bag (RETAIL) 4 x 12 packs x 25 bags per pack 1200/cs",soh:10},
+  {code:"BO-NT-24W",name:"No Tree Wide Bowl w/compostable lining 24oz 300/cs",soh:3},
+  {code:"BO-NT-32W",name:"No Tree Wide Bowl w/compostable lining 32oz 300/cs",soh:1},
+  {code:"BO-NT-42W",name:"No Tree Wide Bowl w/compostable lining 42oz 300/cs",soh:6},
+  {code:"BO-SC-U11-LFP",name:"Sugarcane/Wheat Straw Cereal Bowl 11.5oz 1000/cs",soh:6},
+  {code:"BO-SC-U24-LFP",name:"Wheat Straw Bowl 24oz 500/cs",soh:6},
+  {code:"BO-SC-U32-LFP",name:"Wheat Straw Bowl 32oz 500/cs",soh:8},
+  {code:"BO-SC-U6-LFP",name:"Sugarcane/Wheat Straw Barrel Bowl 6oz 1000/cs",soh:2},
+  {code:"BO-SC-UBB",name:"Wheat Straw Burrito Bowl 32oz 300/cs",soh:2},
+  {code:"BO-SU-12",name:"No Tree Bowl w/compostable lining 12oz 500/cs",soh:1},
+  {code:"BO-SU-24",name:"No Tree Bowl w/compostable lining 24oz 500/cs",soh:1},
+  {code:"BOL-CS-24",name:"Clear Ingeo Lid for 24-32oz Fibre Bowl, 300/cs",soh:5},
+  {code:"BOL-CS-UBB",name:"LID - 32oz Burrito Bowl, Clear Ingeo, 300/cs",soh:3},
+  {code:"BOL-NT-24WW",name:"Lid for NoTree WIDE Bowls w/WINDOW 24-32oz 300/cs",soh:3},
+  {code:"BOL-PA-12-K",name:"LID Paper for 12-32 oz Paper Bowls, Kraft 500/case",soh:1},
+  {code:"BOL-PA-8-K",name:"LID Paper for 8 oz Paper Bowls, Kraft 500/case",soh:2},
+  {code:"BOL-SC-U24-LF",name:"Wheat Straw Lid for 16-32oz Fibre Bowl, 500/cs",soh:8},
+  {code:"BORT-SC-U11",name:"Cereal Bowl 11.5oz Retail Pack Case 12 packs x 20 pieces per pack",soh:7},
+  {code:"BQ-SC-48-LFS",name:"Fibre Square Bowl 48oz 400/cs",soh:1},
+  {code:"BQL-CS-24",name:"Clear Ingeo Lid for SQUARE 24-48oz Fibre Bowl, 200/cs",soh:1},
+  {code:"BQL-SC-24-LF",name:"FIBRE Lid for SQUARE 24-48oz Fibre Bowl, 400/cs",soh:2},
+  {code:"BV-SC-U24",name:"Fibre OVAL Bowl 24oz 300/cs",soh:1},
+  {code:"BV-SC-U32",name:"Fibre OVAL Bowl 32oz 300/cs",soh:1},
+  {code:"CBD1440-120",name:'Retail Doggie Bags - 8 x 13" - 12 rolls x 120 bags/roll',soh:9},
+  {code:"CBD864-18",name:'Retail Doggie Bags - 9 x 13" - 48 rolls x 18 per roll',soh:6},
+  {code:"CBR1617-6",name:'16 x 17" RETAIL PACK Compostable Bin Liner w/Easy Tie 24 rolls x 30 per roll 720/cs',soh:12},
+  {code:"CF-DC-12",name:"Ingeo Round Deli Container 12oz 500/cs",soh:2},
+  {code:"CF-DC-16",name:"Ingeo Round Deli Container 16oz 500/cs",soh:6},
+  {code:"CF-DC-32",name:"Ingeo Round Deli Container 32oz 500/cs",soh:4},
+  {code:"CFCL-1232-CA",name:"CPLA Compostable Lid for Paper Bowl 12/16/24/32oz 500/cs",soh:17},
+  {code:"CFCL-8-CA",name:"Compostable Lid for Paper Bowl 8oz 1000/cs",soh:5},
+  {code:"CHCL-1020-CA",name:"CPLA Compostable Hot Cup Lids 10-20oz 1000/cs",soh:21},
+  {code:"CHCL-8-CA",name:"CPLA Compostable Hot Cup Lids 8oz 1000/cs",soh:6},
+  {code:"CP-CS-12",name:"Corn Cold Cup 12oz 1000/cs",soh:14},
+  {code:"CP-CS-16",name:"Corn Cold Cup 16oz 1000/cs",soh:12},
+  {code:"CP-CS-1SN",name:"Corn Souffle Cup 1oz 3000/cs",soh:6},
+  {code:"CP-CS-20",name:"Corn Cold Cup 20oz 1000/cs",soh:4},
+  {code:"CP-CS-24",name:"Corn Cold Cup 24oz 1000/cs",soh:2},
+  {code:"CP-CS-2S",name:"Corn Souffle Cup 2oz 2000/cs",soh:9},
+  {code:"CP-CS-2SF",name:"Flat Souffle Cup, Clear 2oz 2000/cs",soh:2},
+  {code:"CP-CS-3",name:"Corn Cold Cup 3oz 2500/cs",soh:10},
+  {code:"CP-CS-32",name:"Corn Cold Cup 32oz 300/cs",soh:3},
+  {code:"CP-CS-4S",name:"Corn Souffle Cup 4oz 1000/cs",soh:6},
+  {code:"CP-CS-5",name:"Corn Cold Cup 5oz 2000/cs",soh:16},
+  {code:"CP-CS-7",name:"Corn Cold Cup 7oz 2000/cs",soh:5},
+  {code:"CP-CS-9",name:"Corn Cold Cup 9oz 2000/cs",soh:9},
+  {code:"CP-CS-9Q",name:"Corn Cold Cup 9oz Squat 1000/cs",soh:5},
+  {code:"CPL-CS-12",name:"Corn Cold Cup Lid w/Straw Hole 10-24oz 1000/cs",soh:13},
+  {code:"CPL-CS-12D",name:"Corn Cold Cup Dome Lid Straw Hole 10-24 oz 1000/cs",soh:6},
+  {code:"CPL-CS-12DP",name:"Corn Cold Cup Dome Lid NO Hole 10-24 oz 1000/cs",soh:4},
+  {code:"CPL-CS-12NS",name:"Corn Cold Cup Sippy Lid 10-24oz 1000/cs",soh:5},
+  {code:"CPL-CS-12SH",name:"Corn Cold Cup Lid Souffle Holder 9Q-24oz 1000/cs",soh:5},
+  {code:"CPL-CS-2P",name:"Parfait Insert for 9 oz Tall Cup - 2000/cs",soh:3},
+  {code:"CPL-CS-2S",name:"Corn Souffle Cup Lid 2 & 3oz 2000/cs",soh:11},
+  {code:"CPL-CS-9",name:"Corn Souffle Cup Lid 4-9 oz 2000/cs",soh:8},
+  {code:"CPRT-CS-16",name:"Compostable Cold Cup 16oz Retail Pack Case 12 packs x 20 pieces per pack",soh:9},
+  {code:"CT-SC-U2-LFP",name:'Fiber Box - 8.7" x 6.7" x 2.1" - 400/cs',soh:10},
+  {code:"CTL-CS-3",name:"LID for Fiber Boxes - Clear Ingeo - 400/cs",soh:9},
+  {code:"CTL-SC-U3-LF",name:"LID for Fiber Boxes - Fibre - 400/cs",soh:12},
+  {code:"CU-PA-16",name:"Paper Hot Cups w/compostable lining 16oz 1000/cs",soh:2},
+  {code:"CU-PA-8",name:"Paper Hot Cups w/compostable lining 8oz 1000/cs",soh:2},
+  {code:"CU-PA-8D",name:"Double Wall Paper Hot Cup w/compostable lining 8oz 1000/cs",soh:1},
+  {code:"CU-SC-2N-LFP",name:"Fibre Portion Cup Unbleached 2oz 2000/cs",soh:11},
+  {code:"CU-SC-4N-LFP",name:"Fibre Portion Cup Unbleached 4oz 1000/cs",soh:3},
+  {code:"CU-SU-12C",name:"No Tree Sugarcane Paper Cold Cups w/compostable lining 12oz 1000/cs",soh:6},
+  {code:"CU-SU-16C",name:"No Tree Sugarcane Paper Cold Cups w/compostable lining 16oz 1000/cs",soh:6},
+  {code:"CU-SU-22C",name:"No Tree Sugarcane Paper Cold Cups w/compostable lining 22oz 1000/cs",soh:5},
+  {code:"CUL-CS-12D",name:"Dome LID PLA - 12-22 oz Paper Cold Cups, Clear 1000/cs",soh:4},
+  {code:"CUL-CS-12F",name:"Flat LID PLA - 12-22 oz Paper Cold Cups, Clear 1000/cs",soh:6},
+  {code:"CUL-FB-12FGN-LF",name:"LID Fiber - 12-22 oz Paper Cold Cups 1000/cs",soh:7},
+  {code:"CUL-FB-12GN-LF",name:"Fibre Lid for 10-20oz Hot Cups, 1000/cs",soh:1},
+  {code:"CUL-FB-12NS-LF",name:"Sippy LID Fiber - 12-22 oz Paper Cold Cups 1000/cs",soh:1},
+  {code:"CUL-FB-8-LF",name:"Fibre Lid for 8oz Hot Cups, 1000/cs",soh:3},
+  {code:"CUL-SC-2N-LFP",name:"Fibre Lid 2oz Portion Cup 2000/cs",soh:7},
+  {code:"CUL-SC-4N-LFP",name:"Fibre Lid 4oz Portion Cup 1000/cs",soh:4},
+  {code:"CURT-PA-12",name:"Paper Hot Cup w/compostable lining 12oz Retail Pack Case 12 packs x 20 pieces per",soh:8},
+  {code:"DC-CS-12",name:"Corn Round Deli Container 12oz 1000/cs",soh:1},
+  {code:"DC-CS-16",name:"Corn Round Deli Container 16oz 1000/cs",soh:1},
+  {code:"DC-CS-24",name:"Corn Round Deli Container 24oz 500/cs",soh:1},
+  {code:"DC-CS-8",name:"Corn Round Deli Container 8oz 1000/cs",soh:1},
+  {code:"DCL-CS-12",name:"Corn Round Deli Container Lid 8/12/16oz 1000/cs",soh:3},
+  {code:"DEL",name:'Delta - 10 x 5 x 13" Twisted Paper Handle Bag Kraft 250/cs',soh:6},
+  {code:"FC-12-CA",name:"FSC Paper Bowl w/compostable lining 12oz 500/cs",soh:15},
+  {code:"FC-16-CA",name:"FSC Paper Bowl w/compostable lining 16oz 500/cs",soh:8},
+  {code:"FC-8-CA",name:"FSC Paper Bowl w/compostable lining 8oz 1000/cs",soh:7},
+  {code:"FO-BB-67",name:'6.7" Bamboo Fork 2000/cs',soh:1},
+  {code:"FO-PS-6L",name:"Fork PLA/Talc w/Ribbing 200F 1000/cs",soh:15},
+  {code:"FO-PS-I",name:"Fork PLA and Talc 200F Individually Wrapped 750/cs",soh:3},
+  {code:"FOF-BB-R-M",name:"Bamboo Fork BILINGUAL Retail Pack Master Case 4 cases x 12 packs x 24 pieces per pack",soh:9},
+  {code:"FTS-18R",name:'Fold Top Bag Sandwich Retail Pack 5.5" x 6.5" Compostable 12 boxes x 100 per box 1200/cs',soh:1},
+  {code:"H59WN-1",name:"12oz PLA Rectangle Deli Container w/Lid 400/cs",soh:29},
+  {code:"H61WN",name:"24oz PLA Rectangle Deli Container w/Lid 250/cs",soh:37},
+  {code:"H84WN-1",name:"64 oz PLA Rectangle Deli Container w/Lid 189/cs",soh:25},
+  {code:"HB1617-6",name:'16 x 17" Compostable Bin Liner 720/cs',soh:11},
+  {code:"HB2125-6",name:'21" x 25" Compostable Bin Liner 480/cs',soh:5},
+  {code:"HB2432-6",name:'24 x 32" Compostable Bin Liner 288/cs',soh:5},
+  {code:"HB2636-8",name:'26 x 36" Compostable Bin Liner 165/cs',soh:3},
+  {code:"HB2844-8",name:'28 x 44" Compostable Bin Liner 135/cs',soh:3},
+  {code:"HB3042-85",name:'30 x 42" Compostable Bin Liner 135/cs',soh:7},
+  {code:"HB3550-85",name:'35" x 50" Compostable Bin Liner 90/cs',soh:6},
+  {code:"HB4248-85",name:'42 x 48" Compostable Bin Liner 80/cs',soh:4},
+  {code:"HB4860-85",name:'48 x 60" Compostable Bin Liner 60/cs',soh:6},
+  {code:"HC-4-CA",name:"Paper Hot Cups w/compostable lining 4oz 1000/cs",soh:11},
+  {code:"HCL-1220-CA",name:"Fibre Lid for 10-20oz Hot Cups, 1000/cs",soh:12},
+  {code:"HP-BAG-6CLM-C",name:'Sugarcane Clamshell 6" x 6" x 3" 1-comp 500/cs',soh:38},
+  {code:"HP-BAG-8CLM-C",name:'Sugarcane Clamshell 8" x 8" x 3" 1-comp 200/cs',soh:33},
+  {code:"HP-BAG-9CLM-C",name:'Sugarcane Clamshell 9" x 9" x 3" 1-comp 200/cs',soh:55},
+  {code:"HP-BAG-9CLM6-C",name:'Sugarcane Clamshell 9" x 6" x 3" 1-comp 200/cs',soh:62},
+  {code:"HR1617-6",name:'16" x 17" Compostable Bin Liner w/cores, 4 rolls x 325 each, 1300/cs',soh:3},
+  {code:"HS-WF1000",name:"Fork Birch Wood 1000/cs",soh:14},
+  {code:"HS-WK1000",name:"Knife Birch Wood 1000/cs",soh:10},
+  {code:"HS-WS1000",name:"Spoon Birch Wood 1000/cs",soh:8},
+  {code:"HSMK-W31-PW",name:"Birch Wood Cutlery Kit (Fork, Knife, Napkin) 250/cs",soh:4},
+  {code:"KL-CS-6N",name:'Corn Clamshell 6" x 6" x 3" 500/cs',soh:2},
+  {code:"KL-CS-8",name:'Corn Clamshell 8" x 8" x 3" 250/cs',soh:2},
+  {code:"KL-CS-95N",name:'Corn Clamshell 9" x 5" x 3" 200/cs',soh:2},
+  {code:"KN-BB-67",name:'6.7" Bamboo Knife 2000/cs',soh:4},
+  {code:"KN-BB-R-M",name:"Bamboo Knife Retail Pack Master Case 4 cases x 12 packs x 24 pieces per pack",soh:8},
+  {code:"KN-FB-6-LF",name:'Fibre Knife 6" 1000/cs',soh:3},
+  {code:"KN-PS-6L",name:"Knife PLA/Talc w/Ribbing 200F 1000/cs",soh:11},
+  {code:"KN-PS-I",name:"Knife PLA and Talc 200F Individually Wrapped 750/cs",soh:26},
+  {code:"NP-SC-DN",name:'100% PCW Paper Dinner Napkins 4 x 8", 3000/cs',soh:4},
+  {code:"NP-SC-LN",name:'100% PCW Paper Lunch Napkins, 6.5" x 6.5", 4500/cs',soh:6},
+  {code:"PCK0816-6",name:'8 x 16" Compostable Produce Bag Flat Seal 4 rolls x 450 bags 1800/cs',soh:4},
+  {code:"PCK1619-6",name:'16 x 19" Compostable Produce Bag Flat Seal 4 rolls x 275 bags 1100/cs',soh:3},
+  {code:"PL-06-NPFA-CA",name:'Sugarcane Plate PFAS Free 6" 1000/cs',soh:4},
+  {code:"PL-07",name:'Sugarcane Plate 7" 1000/cs',soh:2},
+  {code:"PL-09-NPFA-CA",name:'Sugarcane Plate PFAS Free 9" 500/cs',soh:19},
+  {code:"PL-SC-U10-LFP",name:'Sugarcane Plate 10" 1-comp (UNBLEACHED) 800/cs',soh:3},
+  {code:"PL-SC-U6-LFP",name:'Sugarcane Plate 6" 1-comp (UNBLEACHED) 1000/cs',soh:1},
+  {code:"PL-SC-U7-LFS",name:'Sugarcane Plate 7" 1-comp (UNBLEACHED) 1000/cs',soh:1},
+  {code:"PL-SC-U9-LFP",name:'Fibre Plate 9" 1-comp (UNBLEACHED) 1000/cs',soh:2},
+  {code:"PLRT-SC-9CUP",name:'9" Party Plates w/ Cup Holder Retail Pack Case 12 packs x 12 per pieces per pack',soh:5},
+  {code:"PLRT-SC-U6-M",name:'Ripple Edge Plate 6" Retail Pack Master Case 4 Case x 12 Packs x 20 pieces per pack',soh:8},
+  {code:"PLRTF-SC-U9",name:'Ripple Edge Plate 9" Retail BILINGUAL Pack Case 12 packs x 20 per pieces per pack',soh:1},
+  {code:"RD-CS-12",name:"Corn Rectangle Deli Container 12oz 900/cs",soh:8},
+  {code:"RD-CS-16",name:"Corn Rectangle Deli Container 16oz 900/cs",soh:2},
+  {code:"RD-CS-24",name:"Corn Rectangle Deli Container 24 oz 600/cs",soh:3},
+  {code:"RD-CS-32",name:"Corn Rectangle Deli Container 32 oz 600/cs",soh:1},
+  {code:"RD-CS-48",name:"Corn Rectangle Deli Container 48 oz 400/cs",soh:2},
+  {code:"RD-CS-64",name:"Corn Rectangle Deli Container 64 oz 400/cs",soh:8},
+  {code:"RD-CS-8",name:"Corn Rectangle Deli Container 8oz 900/cs",soh:4},
+  {code:"RDL-CS-24",name:"Corn Rectangle Deli Lid 24-32 oz 600/cs",soh:4},
+  {code:"RDL-CS-48",name:"Corn Rectangle Deli Lid 48/64 oz 400/cs",soh:10},
+  {code:"RDL-CS-8",name:"Corn Rectangle Deli Lid 8/12/16 oz 900/cs",soh:14},
+  {code:"S03WN",name:"FreshServe Easy Seal LID for 32oz Bowl, PLA, 480/cs",soh:10},
+  {code:"S06WN",name:"FreshServe Easy Seal 32oz Bowl, PLA, 480/cs",soh:6},
+  {code:"SB-CS-16",name:"Corn Salad Bowl 16oz 450/cs",soh:4},
+  {code:"SB-CS-24",name:"Corn Salad Bowl 24oz 600/cs",soh:2},
+  {code:"SB-CS-32",name:"Corn Salad Bowl 32oz 600/cs",soh:2},
+  {code:"SBL-CS-16",name:"Corn Salad Bowl Lid 16oz 450/cs",soh:4},
+  {code:"SBL-CS-32",name:"Corn Salad Bowl Lid 24-48oz 600/cs",soh:4},
+  {code:"SF-NT-2",name:"No Tree Portion Cup w/compostable lining 2oz 2000/cs",soh:1},
+  {code:"SFL-NT-2",name:"LID Paper for 2 oz No Tree Portion Cup, 1000/case",soh:3},
+  {code:"SL-PA-LG",name:"100% PCW Paper Sleeves 10-20oz 1000/cs",soh:5},
+  {code:"SL-PA-ME",name:"100% PCW Paper Sleeves 8oz 1000/cs",soh:3},
+  {code:"SO-PS-B",name:"Soup Spoon PLA and Talc 200F 1000/cs",soh:9},
+  {code:"SP-BB-R-M",name:"Bamboo Spoon Retail Pack Master Case 4 cases x 12 packs x 24 pieces per pack",soh:5},
+  {code:"SP-CS-3",name:'Tasting Spoons 3" 120F 3000/cs',soh:3},
+  {code:"SP-FB-3-LF",name:'Fibre Sample Spoon 3" 3000/cs',soh:5},
+  {code:"SP-FB-6-LF",name:'Fibre Spoon 6" 1000/cs',soh:3},
+  {code:"SP-PS-6L",name:"Spoon PLA/Talc w/Ribbing 200F 1000/cs",soh:11},
+  {code:"SP-PS-I",name:"Spoon PLA and Talc 200F Individually Wrapped 750/cs",soh:3},
+  {code:"SQ-SC-7-LFS",name:'Square Fibre Plate 7" 1-comp (UNBLEACHED) 1000/cs',soh:4},
+  {code:"SQ-SC-9-LFS",name:'Square Fibre Plate 9" 1-comp (UNBLEACHED) 500/cs',soh:2},
+  {code:"ST-PA-8-K",name:'8" FSC Kraft Paper Straw 6000/case',soh:4},
+  {code:"ST-PA-8W-K",name:'8" FSC Kraft Paper Straw WRAPPED 6000/case',soh:4},
+  {code:"STRE-CT-6BK",name:'6" FSC Paper Straw 4000/case',soh:3},
+  {code:"STRT-PA-8-K-M",name:'8" Compostable Kraft Paper Straws Retail Master Case 4 cases x 24 packs x 50 pieces per pack',soh:3},
+  {code:"SW-NT-M",name:"NoTree Medium Sandwich Wedge with PLA Window 500/cs",soh:3},
+  {code:"SYD",name:'Sydney - 13 x 7 x 13" Twisted Paper Handle Bag Kraft 250/cs',soh:1},
+  {code:"TO-NT-1",name:"NoTree #1 Bamboo Paper Fold Top Containers w/compostable lining 450/cs",soh:2},
+  {code:"TO-NT-1W",name:"NoTree Paper #1 Take-Out Container with PLA Window (26oz) Bamboo Paper 200/cs",soh:2},
+  {code:"TO-NT-3",name:"NoTree #3 Bamboo Paper Fold Top Containers w/compostable lining 200/cs",soh:1},
+  {code:"TO-NT-3W",name:"NoTree Paper #3 Take-Out Container with PLA Window (65oz) Bamboo Paper 200/cs",soh:7},
+  {code:"TO-NT-4",name:"NoTree #4 Bamboo Paper Fold Top Containers w/compostable lining 160/cs",soh:5},
+  {code:"TO-NT-8",name:"NoTree #8 Bamboo Paper Fold Top Containers w/compostable lining 300/cs",soh:2},
+  {code:"TO-NT-8W",name:"NoTree Paper #8 Take-Out Container with PLA Window (46oz) Bamboo Paper 200/cs",soh:9},
+  {code:"TO-SC-T3-LFS",name:"Plant Fibre 3 Compartment Taco Tray 300/case",soh:2},
+  {code:"TO-SC-U34D-LFP",name:'Fibre Clamshell 9" x 6" x 3" 2-comp 500/cs',soh:3},
+  {code:"TR-SC-U10T",name:'Plant Fibre Three Compartment Tray, 9.8" x 7.5", 400/cs',soh:10},
+  {code:"TR-SC-U8-LFS",name:'Plant Fibre One Compartment Tray, 8x6x1.5", 400/cs',soh:2},
+  {code:"TR-SC-UAR-LFS",name:'Plant Fibre Boat Tray Unbleached 6.5" x 5" x 1.5" 600/cs',soh:3},
+  {code:"TRL-CS-10T",name:'Ingeo Three Compartment Tray Lid, 10" x 7.5", 400/cs',soh:10},
+  {code:"TRL-CS-8",name:'Ingeo One Compartment Tray LID, 8x6", 400/cs',soh:2},
+  {code:"TRL-SC-8-LF",name:'Plant Fibre LID for Tray, 8x6x1.5", 400/cs',soh:2},
+  {code:"TRL-SC-UAR-LF",name:'Plant Fibre Boat Tray LID Unbleached 6.5" x 5" x 1.5" 600/cs',soh:4},
+  {code:"VAN",name:'Vanity - 10 x 5 x 13" Twisted Paper Handle Bag Kraft 250/cs',soh:2},
+  {code:"VWPLATS",name:"Regular platter box and insert w/PLA Window (12.2 x 8.9 x 3.2in)",soh:1},
+  {code:"W-HC-10-CA",name:"Paper Hot Cups w/compostable lining 10oz 1000/cs",soh:15},
+  {code:"W-HC-12-CA",name:"White Paper Hot Cups w/compostable lining 12oz 1000/cs",soh:14},
+  {code:"W-HC-16-CA",name:"Paper Hot Cups w/compostable lining 16oz 1000/cs",soh:11},
+  {code:"W-HC-8-CA",name:"Paper Hot Cups w/compostable lining 8oz 1000/cs",soh:8},
+];
+
+// ── State ────────────────────────────────────────────────────────────────────
+let orders = [];
+let extracted = null;
+let editItems = [];
+let cfg = { apiKey: '', fileUrl: '' };
+
+// ── Config ───────────────────────────────────────────────────────────────────
+function loadConfig() {
+  try { cfg = JSON.parse(localStorage.getItem('wdec_cfg') || '{}'); } catch {}
+  if (cfg.apiKey) document.getElementById('cfg-api-key').value = cfg.apiKey;
+  if (cfg.fileUrl) document.getElementById('cfg-file-url').value = cfg.fileUrl;
+}
+function saveConfig() {
+  cfg.apiKey  = document.getElementById('cfg-api-key').value.trim();
+  cfg.fileUrl = document.getElementById('cfg-file-url').value.trim();
+  localStorage.setItem('wdec_cfg', JSON.stringify(cfg));
+  document.getElementById('cfg-msg').textContent = 'Saved. Connecting…';
+  loadData();
+}
+function toggleConfig() {
+  document.getElementById('config-panel').classList.toggle('open');
+}
+
+// ── OneDrive sync ─────────────────────────────────────────────────────────────
+const WRITE_URL = '';
+
+async function loadData() {
+  if (!cfg.fileUrl) { setSyncStatus('err', 'No file URL configured — enter it in Settings'); loadLocalFallback(); return; }
+  setSyncStatus('', 'Loading…');
+  try {
+    const res = await fetch(cfg.fileUrl);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    orders = text.trim() ? JSON.parse(text) : [];
+    setSyncStatus('ok', 'Synced — ' + orders.length + ' orders loaded');
+    renderAll();
+  } catch (e) {
+    loadLocalFallback();
+    setSyncStatus('err', 'OneDrive unavailable — using local cache (' + orders.length + ' orders). Error: ' + e.message);
+  }
+}
+
+function loadLocalFallback() {
+  try { const local = localStorage.getItem('wdec_orders_v1'); orders = local ? JSON.parse(local) : []; } catch { orders = []; }
+  renderAll();
+}
+
+async function saveData() {
+  localStorage.setItem('wdec_orders_v1', JSON.stringify(orders));
+  if (!WRITE_URL) {
+    setSyncStatus('ok', 'Saved locally (' + orders.length + ' orders) — OneDrive write endpoint not yet configured');
+    return;
+  }
+  try {
+    setSyncStatus('', 'Saving to OneDrive…');
+    const res = await fetch(WRITE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orders }) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    setSyncStatus('ok', 'Saved to OneDrive — ' + orders.length + ' orders');
+  } catch (e) {
+    setSyncStatus('err', 'OneDrive save failed — data saved locally only. ' + e.message);
+  }
+}
+
+function setSyncStatus(state, msg) {
+  const dot = document.getElementById('sync-dot');
+  dot.className = state === 'ok' ? 'ok' : state === 'err' ? 'err' : '';
+  document.getElementById('sync-msg').textContent = msg;
+}
+
+// ── Inventory calculation ─────────────────────────────────────────────────────
+function computeInventory() {
+  const inv = {};
+  OPENING.forEach(p => { inv[p.code] = { ...p, current: p.soh, totalIn: 0, totalOut: 0 }; });
+  const sorted = [...orders].sort((a,b) => a.date.localeCompare(b.date));
+  sorted.forEach(order => {
+    order.items.forEach(item => {
+      const k = item.productId;
+      if (!inv[k]) inv[k] = { code: k, name: item.description, soh: 0, current: 0, totalIn: 0, totalOut: 0 };
+      if (order.type === 'INBOUND') { inv[k].current += item.cases; inv[k].totalIn += item.cases; }
+      else { inv[k].current -= item.cases; inv[k].totalOut += item.cases; }
+    });
+  });
+  return inv;
+}
+
+// ── PDF Extraction ────────────────────────────────────────────────────────────
+async function extractPdf(b64) {
+  if (!cfg.apiKey) throw new Error('No API key configured. Open Settings and enter your Anthropic API key.');
+  const prompt = `Extract data from this Earth Distributors warehouse document.
+
+Determine INBOUND vs OUTBOUND:
+- If "Ship To" contains "West Direct" OR "333 28 Street NE" OR "Earth Distributors c/o West Direct" → INBOUND
+- Otherwise → OUTBOUND
+
+Extract:
+1. type: "INBOUND" or "OUTBOUND"
+2. salesOrderNumber: the P.O. # number (digits only, e.g. "032514")
+3. date: Ship Date as YYYY-MM-DD (e.g. "26-05-01" → "2026-05-01")
+4. shipTo: the Ship To company name
+5. items: array of {productId, description, cases} where cases is integer quantity
+
+Return ONLY valid JSON, no markdown fences:
+{"type":"OUTBOUND","salesOrderNumber":"032514","date":"2026-05-01","shipTo":"Nicks Steak House","items":[{"productId":"HP-BAG-9CLM6-C","description":"Sugarcane Clamshell 9x6x3 200/cs","cases":6}]}`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': cfg.apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-calls': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1500,
+      messages: [{ role: 'user', content: [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
+        { type: 'text', text: prompt }
+      ]}]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  const text = data.content?.find(b => b.type === 'text')?.text || '';
+  return JSON.parse(text.replace(/```json|```/g,'').trim());
+}
+
+function toBase64(file) {
+  return new Promise((res,rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('Read failed'));
+    r.readAsDataURL(file);
+  });
+}
+
+async function handleFile(file) {
+  if (!file || file.type !== 'application/pdf') {
+    showUploadState('error');
+    document.getElementById('upload-err-msg').textContent = 'Please upload a PDF file.';
+    return;
+  }
+  showUploadState('processing');
+  try {
+    const b64 = await toBase64(file);
+    extracted = await extractPdf(b64);
+    editItems = extracted.items.map(i => ({...i}));
+    renderReview();
+    showUploadState('review');
+  } catch(e) {
+    showUploadState('error');
+    document.getElementById('upload-err-msg').textContent = e.message || 'Could not extract data. Check your API key and try again.';
+  }
+}
+
+function showUploadState(state) {
+  ['idle','processing','review','done','error'].forEach(s => {
+    document.getElementById('upload-' + s).style.display = s === state ? 'block' : 'none';
+  });
+  if (state === 'idle') document.getElementById('file-input').value = '';
+}
+
+function resetUpload() { extracted = null; editItems = []; showUploadState('idle'); }
+
+function renderReview() {
+  const badgeEl = document.getElementById('rev-badge');
+  badgeEl.className = extracted.type === 'INBOUND' ? 'badge-in' : 'badge-out';
+  badgeEl.textContent = extracted.type;
+  document.getElementById('rev-so').textContent = 'SO# ' + extracted.salesOrderNumber;
+  document.getElementById('rev-meta').textContent = extracted.date + ' · ' + extracted.shipTo;
+  document.getElementById('rev-direction').textContent = extracted.type === 'INBOUND' ? 'Stock coming IN' : 'Stock going OUT';
+  renderReviewItems();
+}
+
+function renderReviewItems() {
+  const tb = document.getElementById('rev-tbody');
+  tb.innerHTML = editItems.map((it,i) => `
+    <tr>
+      <td><input class="review-inp" style="width:140px" value="${esc(it.productId)}" onchange="editItems[${i}].productId=this.value" /></td>
+      <td><input class="review-inp w-full" value="${esc(it.description)}" onchange="editItems[${i}].description=this.value" /></td>
+      <td><input class="review-inp w-cases" type="number" value="${it.cases}" onchange="editItems[${i}].cases=parseInt(this.value)||0" /></td>
+      <td><button class="btn-danger" onclick="removeReviewLine(${i})">✕</button></td>
+    </tr>`).join('');
+}
+
+function removeReviewLine(i) { editItems.splice(i,1); renderReviewItems(); }
+function addReviewLine() { editItems.push({productId:'',description:'',cases:0}); renderReviewItems(); }
+
+async function confirmOrder() {
+  const order = { ...extracted, items: [...editItems], id: Date.now().toString() };
+  orders.push(order);
+  await saveData();
+  renderAll();
+  showUploadState('done');
+}
+
+// ── Render functions ──────────────────────────────────────────────────────────
+function renderAll() {
+  renderDashboard();
+  renderInventory();
+  renderHistory();
+}
+
+function renderDashboard() {
+  const inv = computeInventory();
+  const vals = Object.values(inv);
+  document.getElementById('s-skus').textContent = vals.length;
+  document.getElementById('s-cases').textContent = vals.reduce((s,p) => s + Math.max(0,p.current), 0);
+  document.getElementById('s-in').textContent = orders.filter(o=>o.type==='INBOUND').length;
+  document.getElementById('s-out').textContent = orders.filter(o=>o.type==='OUTBOUND').length;
+
+  const recent = [...orders].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8);
+  document.getElementById('dash-orders').innerHTML = recent.length ? `
+    <table><thead><tr><th>Date</th><th>SO#</th><th>Type</th><th>Lines</th></tr></thead><tbody>
+    ${recent.map(o=>`<tr><td class="text-muted">${o.date}</td><td>${o.salesOrderNumber}</td><td><span class="${o.type==='INBOUND'?'badge-in':'badge-out'}">${o.type}</span></td><td class="text-muted">${o.items.length}</td></tr>`).join('')}
+    </tbody></table>` : '<span class="text-dim" style="font-size:13px">No orders yet.</span>';
+
+  renderDashSearch();
+}
+
+function renderDashSearch() {
+  const inv = computeInventory();
+  const q = document.getElementById('dash-search').value.toLowerCase();
+  const list = Object.values(inv).filter(p => !q || p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q)).slice(0,15);
+  document.getElementById('dash-inv-list').innerHTML = list.map(p=>`
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e2130;font-size:12px">
+      <div>
+        <div class="text-green" style="font-weight:500">${p.code}</div>
+        <div class="text-muted" style="font-size:11px">${p.name.slice(0,58)}${p.name.length>58?'…':''}</div>
+      </div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${p.current<0?'var(--red)':'var(--text)'};min-width:36px;text-align:right">${p.current}</div>
+    </div>`).join('');
+}
+
+function renderInventory() {
+  const inv = computeInventory();
+  const q = document.getElementById('inv-search').value.toLowerCase();
+  const list = Object.values(inv).sort((a,b)=>a.code.localeCompare(b.code))
+    .filter(p => !q || p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
+  document.getElementById('inv-count').textContent = list.length + ' SKUs';
+  document.getElementById('inv-tbody').innerHTML = list.map(p=>`
+    <tr>
+      <td class="text-green" style="font-weight:500;white-space:nowrap">${p.code}</td>
+      <td class="text-muted" style="font-size:11px;max-width:380px">${p.name}</td>
+      <td class="ta-r text-muted">${p.soh}</td>
+      <td class="ta-r" style="color:var(--green)">${p.totalIn>0?'+'+p.totalIn:'–'}</td>
+      <td class="ta-r" style="color:var(--red)">${p.totalOut>0?'-'+p.totalOut:'–'}</td>
+      <td class="ta-r" style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:${p.current<0?'var(--red)':'var(--text)'}">${p.current}</td>
+    </tr>`).join('');
+}
+
+function renderHistory() {
+  const type = document.getElementById('hist-type').value;
+  const from = document.getElementById('hist-from').value;
+  const to   = document.getElementById('hist-to').value;
+  const filtered = orders.filter(o => {
+    if (type !== 'all' && o.type !== type) return false;
+    if (from && o.date < from) return false;
+    if (to   && o.date > to)   return false;
+    return true;
+  }).sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('hist-count').textContent = filtered.length + ' orders';
+  document.getElementById('hist-list').innerHTML = filtered.length ? filtered.map(o=>`
+    <div class="card-sm">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div class="flex">
+          <span class="${o.type==='INBOUND'?'badge-in':'badge-out'}">${o.type}</span>
+          <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px">SO# ${o.salesOrderNumber}</span>
+        </div>
+        <div class="text-muted" style="font-size:12px">${o.date} · ${esc(o.shipTo)}</div>
+      </div>
+      <table><thead><tr><th>Product ID</th><th>Description</th><th class="ta-r">Cases</th></tr></thead><tbody>
+      ${o.items.map(it=>`<tr><td class="text-green" style="font-size:12px;white-space:nowrap">${esc(it.productId)}</td><td class="text-muted" style="font-size:11px">${esc(it.description)}</td><td class="ta-r" style="font-weight:500">${it.cases}</td></tr>`).join('')}
+      </tbody></table>
+    </div>`).join('') : '<div class="text-dim" style="font-size:13px">No orders match the current filter.</div>';
+}
+
+function clearHistFilter() {
+  document.getElementById('hist-type').value = 'all';
+  document.getElementById('hist-from').value = '';
+  document.getElementById('hist-to').value   = '';
+  renderHistory();
+}
+
+function renderSearch() {
+  const inv = computeInventory();
+  const q = document.getElementById('srch-input').value.toLowerCase().trim();
+  const field = document.getElementById('srch-field').value;
+  const el = document.getElementById('srch-results');
+  if (!q) { el.innerHTML = '<div class="text-dim" style="font-size:13px">Enter a search term above.</div>'; return; }
+
+  const matchProds = (field==='all'||field==='product')
+    ? Object.values(inv).filter(p=>p.code.toLowerCase().includes(q)||p.name.toLowerCase().includes(q)) : [];
+  const matchOrders = (field==='all'||field==='order')
+    ? orders.filter(o=>o.salesOrderNumber?.toLowerCase().includes(q)||o.shipTo?.toLowerCase().includes(q)||o.date?.includes(q)||o.items?.some(i=>i.productId.toLowerCase().includes(q)||i.description.toLowerCase().includes(q))) : [];
+
+  let html = '';
+  if (matchProds.length) {
+    html += `<div class="label mb12">Products (${matchProds.length})</div>
+    <div class="card mb20" style="padding:0"><table><thead><tr><th>Code</th><th>Description</th><th class="ta-r">On Hand</th></tr></thead><tbody>
+    ${matchProds.map(p=>`<tr><td class="text-green" style="font-weight:500">${p.code}</td><td class="text-muted" style="font-size:11px">${p.name}</td><td class="ta-r" style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:${p.current<0?'var(--red)':'var(--text)'}">${p.current}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  }
+  if (matchOrders.length) {
+    html += `<div class="label mb12">Orders (${matchOrders.length})</div><div class="stacks">
+    ${matchOrders.map(o=>`<div class="card-sm"><div class="flex mb10">
+      <span class="${o.type==='INBOUND'?'badge-in':'badge-out'}">${o.type}</span>
+      <span style="font-family:'Syne',sans-serif;font-weight:700">SO# ${o.salesOrderNumber}</span>
+      <span class="text-muted" style="font-size:12px">${o.date} · ${esc(o.shipTo)}</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      ${o.items.map(it=>`<div class="tag"><span class="text-green">${esc(it.productId)}</span><span class="text-muted">×</span><span>${it.cases}</span></div>`).join('')}
+    </div></div>`).join('')}
+    </div>`;
+  }
+  if (!matchProds.length && !matchOrders.length) html = `<div class="text-dim" style="font-size:13px">No results for "${esc(q)}".</div>`;
+  el.innerHTML = html;
+}
+
+// ── Tab navigation ────────────────────────────────────────────────────────────
+function showTab(id, evt) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (evt && evt.target) evt.target.classList.add('active');
+  if (id==='inventory') renderInventory();
+  if (id==='history') renderHistory();
+  if (id==='search') { document.getElementById('srch-input').focus(); }
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.getElementById('header-date').innerHTML =
+  '<div>' + new Date().toISOString().slice(0,10) + '</div>' +
+  '<div style="color:#3a5a40">Opening: May 1, 2026</div>';
+loadConfig();
+showUploadState('idle');
+loadData();
+</script>
+</body>
+</html>
