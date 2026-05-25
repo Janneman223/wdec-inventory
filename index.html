@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>WDEC · Earth Distributors Inventory</title>
+<title>WDC · Inventory</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@700;800&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,58 +14,88 @@
     --green: #7ec87e; --green-bg: #1a3a1f; --green-border: #3a6a3f;
     --red: #e87e7e; --red-bg: #3a1a1a; --red-border: #6a3a3a;
     --accent: #3a5a40;
+    --blue: #7eb8c8; --blue-bg: #1a2f3a; --blue-border: #3a6a7a;
+    --blue-accent: #2a4a5a;
   }
   body { background: var(--bg); color: var(--text); font-family: 'DM Mono', 'Courier New', monospace; min-height: 100vh; }
   ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--surface); } ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+  /* Company switcher */
+  #company-bar { display: flex; background: #13151e; border-bottom: 2px solid var(--border); padding: 0 32px; gap: 0; }
+  .co-btn { background: none; border: none; border-bottom: 3px solid transparent; margin-bottom: -2px; cursor: pointer; padding: 14px 24px; font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); transition: color .2s, border-color .2s; }
+  .co-btn:hover { color: var(--text); }
+  .co-btn.active-earth { color: var(--green); border-bottom-color: var(--green); }
+  .co-btn.active-funding { color: var(--blue); border-bottom-color: var(--blue); }
+  #co-indicator { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); }
+  .co-pill { padding: 3px 10px; border-radius: 4px; font-size: 10px; letter-spacing: .1em; }
+  .co-pill-earth { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .co-pill-funding { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
+
   #header { border-bottom: 1px solid var(--border); padding: 0 32px; }
   #header-top { display: flex; align-items: center; justify-content: space-between; padding: 18px 0 12px; }
   #logo { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
   #logo span { color: var(--green); }
+  #logo span.funding { color: var(--blue); }
   #sub { font-size: 10px; color: var(--muted); letter-spacing: .15em; margin-top: 2px; }
   #header-date { font-size: 11px; color: var(--muted); text-align: right; }
   #tabs { display: flex; gap: 4px; }
   .tab { background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; padding: 10px 18px; font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); transition: color .2s, border-color .2s; }
   .tab:hover { color: #a8c5a0; }
   .tab.active { color: var(--green); border-bottom-color: var(--green); }
+  .tab.active.funding { color: var(--blue); border-bottom-color: var(--blue); }
   #main { padding: 28px 32px; max-width: 1200px; margin: 0 auto; }
+
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; }
   .card-sm { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px 22px; }
   .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; }
   .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
   .badge-in  { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); padding: 2px 8px; border-radius: 4px; font-size: 11px; letter-spacing: .08em; white-space: nowrap; }
   .badge-out { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); padding: 2px 8px; border-radius: 4px; font-size: 11px; letter-spacing: .08em; white-space: nowrap; }
+
   input, select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 13px; outline: none; }
   input:focus, select:focus { border-color: var(--green); }
   .inp-full { width: 100%; }
+
   .btn-primary { background: var(--accent); color: #d4efd4; border: 1px solid #5a8a60; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; transition: background .2s; }
   .btn-primary:hover { background: #4a7a50; }
+  .btn-primary.funding { background: var(--blue-accent); border-color: #4a7a8a; color: #d4eaf0; }
+  .btn-primary.funding:hover { background: #3a6a7a; }
   .btn-ghost { background: none; border: 1px solid var(--border); color: #888; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 12px; transition: border-color .2s, color .2s; }
   .btn-ghost:hover { border-color: var(--green); color: var(--green); }
   .btn-danger { background: none; border: 1px solid var(--red-border); color: var(--red); padding: 5px 9px; border-radius: 4px; cursor: pointer; font-size: 11px; font-family: 'DM Mono', monospace; }
   .btn-danger:hover { background: var(--red-bg); }
   .btn-sm { padding: 6px 12px; font-size: 11px; }
+
   table { width: 100%; border-collapse: collapse; }
   th { text-align: left; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); }
   td { padding: 9px 12px; font-size: 12px; border-bottom: 1px solid #1e2130; vertical-align: middle; }
   tr:hover td { background: #1e2130; }
   .ta-r { text-align: right; }
+
   .drop-zone { border: 2px dashed var(--accent); border-radius: 12px; padding: 60px 40px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; }
   .drop-zone:hover, .drop-zone.drag { border-color: var(--green); background: #1a2a1f; }
+  .drop-zone.funding { border-color: var(--blue-accent); }
+  .drop-zone.funding:hover, .drop-zone.funding.drag { border-color: var(--blue); background: #1a2a30; }
+
   .label { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
   .flex { display: flex; align-items: center; gap: 10px; }
   .flex-between { display: flex; align-items: center; justify-content: space-between; }
   .mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}.mb20{margin-bottom:20px}.mb24{margin-bottom:24px}
-  .text-green{color:var(--green)}.text-red{color:var(--red)}.text-muted{color:var(--muted)}.text-dim{color:var(--dim)}
+  .text-green{color:var(--green)}.text-blue{color:var(--blue)}.text-red{color:var(--red)}.text-muted{color:var(--muted)}.text-dim{color:var(--dim)}
   .big-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 36px; line-height: 1; }
   .tag { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; }
   .stacks { display: flex; flex-direction: column; gap: 12px; }
+
   #sync-bar { font-size: 11px; color: var(--muted); padding: 6px 32px; background: #13151e; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
   #sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); display: inline-block; }
   #sync-dot.ok { background: var(--green); }
   #sync-dot.err { background: var(--red); }
+
   #config-panel { background: #13151e; border-bottom: 1px solid var(--border); padding: 20px 32px; display: none; }
   #config-panel.open { display: block; }
+
   .page { display: none; } .page.active { display: block; }
   .review-inp { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 5px 8px; border-radius: 4px; font-family: 'DM Mono', monospace; font-size: 11px; }
   .review-inp:focus { border-color: var(--green); outline: none; }
@@ -88,10 +119,19 @@
   </div>
 </div>
 
+<!-- Company switcher -->
+<div id="company-bar">
+  <button class="co-btn active-earth" id="co-earth" onclick="switchCompany('earth')">🌿 Earth Distributors</button>
+  <button class="co-btn" id="co-funding" onclick="switchCompany('funding')">🖼 Funding Innovations</button>
+  <div id="co-indicator">
+    <span id="co-pill" class="co-pill co-pill-earth">EARTH DISTRIBUTORS</span>
+  </div>
+</div>
+
 <div id="header">
   <div id="header-top">
     <div>
-      <div id="logo"><span>WDEC</span> / Inventory</div>
+      <div id="logo"><span id="logo-co">WDEC</span> / Inventory</div>
       <div id="sub">Earth Distributors · Warehouse Tracker</div>
     </div>
     <div id="header-date"></div>
@@ -111,11 +151,11 @@
   <div id="page-dashboard" class="page active">
     <div class="grid-4">
       <div class="stat-card"><div class="label">Total SKUs</div><div class="big-num" id="s-skus">—</div><div class="text-dim" style="font-size:11px;margin-top:4px">product codes</div></div>
-      <div class="stat-card"><div class="label">Cases On Hand</div><div class="big-num" id="s-cases">—</div><div class="text-dim" style="font-size:11px;margin-top:4px">current total</div></div>
+      <div class="stat-card"><div class="label" id="s-units-lbl">Cases On Hand</div><div class="big-num" id="s-cases">—</div><div class="text-dim" style="font-size:11px;margin-top:4px" id="s-units-sub">current total</div></div>
       <div class="stat-card"><div class="label">Inbound Orders</div><div class="big-num text-green" id="s-in">—</div><div class="text-dim" style="font-size:11px;margin-top:4px">purchase orders</div></div>
       <div class="stat-card"><div class="label">Outbound Orders</div><div class="big-num text-red" id="s-out">—</div><div class="text-dim" style="font-size:11px;margin-top:4px">invoices shipped</div></div>
     </div>
-    <div class="grid-2" style="margin-top:28px">
+    <div class="grid-2" style="margin-top:0">
       <div class="card">
         <div class="label mb16">Recent Orders</div>
         <div id="dash-orders"><span class="text-dim" style="font-size:13px">No orders yet.</span></div>
@@ -132,14 +172,14 @@
   <div id="page-upload" class="page" style="max-width:720px">
     <div class="label mb20">Upload Invoice or Purchase Order PDF</div>
     <div id="upload-idle">
-      <div class="drop-zone" onclick="document.getElementById('file-input').click()"
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
         ondragover="event.preventDefault();this.classList.add('drag')"
         ondragleave="this.classList.remove('drag')"
         ondrop="event.preventDefault();this.classList.remove('drag');handleFile(event.dataTransfer.files[0])">
         <input type="file" id="file-input" accept="application/pdf" style="display:none" onchange="handleFile(this.files[0])" />
         <div style="font-size:32px;margin-bottom:12px">📄</div>
         <div style="font-size:14px;color:var(--muted);margin-bottom:6px">Drop a PDF here or click to browse</div>
-        <div style="font-size:11px;color:var(--dim)">Invoices (outbound) and Purchase Orders (inbound) both supported</div>
+        <div style="font-size:11px;color:var(--dim)" id="upload-hint">Invoices (outbound) and Purchase Orders (inbound) both supported</div>
       </div>
     </div>
     <div id="upload-processing" style="display:none">
@@ -162,13 +202,13 @@
         </div>
         <div class="label mb12">Line Items — Review &amp; Edit</div>
         <table style="margin-bottom:12px">
-          <thead><tr><th>Product ID</th><th>Description</th><th class="ta-r">Cases</th><th></th></tr></thead>
+          <thead><tr><th>Print / Product ID</th><th>Description</th><th class="ta-r" id="rev-qty-hdr">Qty</th><th></th></tr></thead>
           <tbody id="rev-tbody"></tbody>
         </table>
         <button class="btn-ghost btn-sm" onclick="addReviewLine()">+ Add Line</button>
       </div>
       <div style="display:flex;gap:12px">
-        <button class="btn-primary" onclick="confirmOrder()">Confirm &amp; Save Order</button>
+        <button class="btn-primary" id="confirm-btn" onclick="confirmOrder()">Confirm &amp; Save Order</button>
         <button class="btn-ghost" onclick="resetUpload()">Cancel</button>
       </div>
     </div>
@@ -176,7 +216,7 @@
       <div class="card" style="text-align:center;padding:48px">
         <div style="font-size:28px;margin-bottom:12px">✓</div>
         <div class="text-green mb16" style="font-size:14px">Order saved — inventory updated</div>
-        <button class="btn-primary" onclick="resetUpload()">Upload Another</button>
+        <button class="btn-primary" id="upload-another-btn" onclick="resetUpload()">Upload Another</button>
       </div>
     </div>
     <div id="upload-error" style="display:none">
@@ -197,7 +237,7 @@
     <div class="card" style="padding:0;overflow:hidden">
       <div style="overflow-x:auto">
         <table>
-          <thead><tr><th>Product Code</th><th>Description</th><th class="ta-r">Opening May 1</th><th class="ta-r">In</th><th class="ta-r">Out</th><th class="ta-r">On Hand</th></tr></thead>
+          <thead><tr><th>Product Code</th><th>Description</th><th class="ta-r" id="inv-open-hdr">Opening</th><th class="ta-r">In</th><th class="ta-r">Out</th><th class="ta-r" id="inv-hand-hdr">On Hand</th></tr></thead>
           <tbody id="inv-tbody"></tbody>
         </table>
       </div>
@@ -251,35 +291,34 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+const db = getFirestore(app);
 
-// Expose DB functions to global scope
-window._fbAddOrder = async (order) => {
-  await addDoc(collection(db, "orders"), order);
+window._fbAddOrder = async (order, col) => {
+  await addDoc(collection(db, col), order);
 };
 
-window._fbLoadOrders = async () => {
-  const q = query(collection(db, "orders"), orderBy("date", "desc"));
+window._fbLoadOrders = async (col) => {
+  const q = query(collection(db, col), orderBy("date", "desc"));
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ ...d.data(), _docId: d.id }));
 };
 </script>
 
 <script>
-// ── Opening Inventory May 1 2026 ─────────────────────────────────────────────
-const OPENING = [
-  {code:"595-10025",name:'#25 Natural Kraft Tray 4.25" x 3.25" x 1.25" (Base 3" x 1.75") 1000/cs',soh:1},
+// ── Opening Inventory — Earth Distributors May 1 2026 ──────────────────────
+const OPENING_EARTH = [
+  {code:"595-10025",name:'#25 Natural Kraft Tray 4.25" x 3.25" x 1.25" 1000/cs',soh:1},
   {code:"7153",name:"#300 Natural Kraft Tray 500/cs",soh:27},
   {code:"7155",name:"#500 Natural Kraft Tray 500/cs",soh:39},
   {code:"80-414C-CASE",name:'Wood Stir Sticks 7" CASE 10 boxes x 1000/box',soh:4},
-  {code:"AS-BB-R-M",name:"Assorted Bamboo Utensils Retail Pack Master Case 4 cases x 12 packs x 24 pieces per pack",soh:12},
+  {code:"AS-BB-R-M",name:"Assorted Bamboo Utensils Retail Pack Master Case",soh:12},
   {code:"AS-PS-FKN",name:"Cutlery Wrapped Set (knife, fork, napkin) 500/cs",soh:15},
   {code:"AS-PS-TN",name:"Cutlery Wrapped Set (knife, fork, spoon, napkin) 250/cs",soh:1},
   {code:"BB-SC-U16",name:"Sugarcane/Wheat Straw Barrel Bowl 16oz 500/cs",soh:1},
   {code:"BB-SC-U8-LFS",name:"Sugarcane/Wheat Straw Barrel Bowl 8oz 500/cs",soh:5},
-  {code:"BBL-SC-U12",name:"Sugarcane/Wheat Straw Barrel Bowl Lid for 8/12/16oz, 500/cs",soh:3},
-  {code:"BGRT-CS-13-M",name:"13 Gallon Compost Waste Bag (RETAIL) 4 x 12 packs x 12 bags per pack 576/cs",soh:6},
-  {code:"BGRT-CS-3-M",name:"3 Gallon Compost Waste Bag (RETAIL) 4 x 12 packs x 25 bags per pack 1200/cs",soh:10},
+  {code:"BBL-SC-U12",name:"Sugarcane/Wheat Straw Barrel Bowl Lid 8/12/16oz 500/cs",soh:3},
+  {code:"BGRT-CS-13-M",name:"13 Gallon Compost Waste Bag (RETAIL) 576/cs",soh:6},
+  {code:"BGRT-CS-3-M",name:"3 Gallon Compost Waste Bag (RETAIL) 1200/cs",soh:10},
   {code:"BO-NT-24W",name:"No Tree Wide Bowl w/compostable lining 24oz 300/cs",soh:3},
   {code:"BO-NT-32W",name:"No Tree Wide Bowl w/compostable lining 32oz 300/cs",soh:1},
   {code:"BO-NT-42W",name:"No Tree Wide Bowl w/compostable lining 42oz 300/cs",soh:6},
@@ -290,21 +329,21 @@ const OPENING = [
   {code:"BO-SC-UBB",name:"Wheat Straw Burrito Bowl 32oz 300/cs",soh:2},
   {code:"BO-SU-12",name:"No Tree Bowl w/compostable lining 12oz 500/cs",soh:1},
   {code:"BO-SU-24",name:"No Tree Bowl w/compostable lining 24oz 500/cs",soh:1},
-  {code:"BOL-CS-24",name:"Clear Ingeo Lid for 24-32oz Fibre Bowl, 300/cs",soh:5},
-  {code:"BOL-CS-UBB",name:"LID - 32oz Burrito Bowl, Clear Ingeo, 300/cs",soh:3},
+  {code:"BOL-CS-24",name:"Clear Ingeo Lid for 24-32oz Fibre Bowl 300/cs",soh:5},
+  {code:"BOL-CS-UBB",name:"LID - 32oz Burrito Bowl Clear Ingeo 300/cs",soh:3},
   {code:"BOL-NT-24WW",name:"Lid for NoTree WIDE Bowls w/WINDOW 24-32oz 300/cs",soh:3},
-  {code:"BOL-PA-12-K",name:"LID Paper for 12-32 oz Paper Bowls, Kraft 500/case",soh:1},
-  {code:"BOL-PA-8-K",name:"LID Paper for 8 oz Paper Bowls, Kraft 500/case",soh:2},
-  {code:"BOL-SC-U24-LF",name:"Wheat Straw Lid for 16-32oz Fibre Bowl, 500/cs",soh:8},
-  {code:"BORT-SC-U11",name:"Cereal Bowl 11.5oz Retail Pack Case 12 packs x 20 pieces per pack",soh:7},
+  {code:"BOL-PA-12-K",name:"LID Paper for 12-32 oz Paper Bowls Kraft 500/case",soh:1},
+  {code:"BOL-PA-8-K",name:"LID Paper for 8 oz Paper Bowls Kraft 500/case",soh:2},
+  {code:"BOL-SC-U24-LF",name:"Wheat Straw Lid for 16-32oz Fibre Bowl 500/cs",soh:8},
+  {code:"BORT-SC-U11",name:"Cereal Bowl 11.5oz Retail Pack Case",soh:7},
   {code:"BQ-SC-48-LFS",name:"Fibre Square Bowl 48oz 400/cs",soh:1},
-  {code:"BQL-CS-24",name:"Clear Ingeo Lid for SQUARE 24-48oz Fibre Bowl, 200/cs",soh:1},
-  {code:"BQL-SC-24-LF",name:"FIBRE Lid for SQUARE 24-48oz Fibre Bowl, 400/cs",soh:2},
+  {code:"BQL-CS-24",name:"Clear Ingeo Lid for SQUARE 24-48oz Fibre Bowl 200/cs",soh:1},
+  {code:"BQL-SC-24-LF",name:"FIBRE Lid for SQUARE 24-48oz Fibre Bowl 400/cs",soh:2},
   {code:"BV-SC-U24",name:"Fibre OVAL Bowl 24oz 300/cs",soh:1},
   {code:"BV-SC-U32",name:"Fibre OVAL Bowl 32oz 300/cs",soh:1},
-  {code:"CBD1440-120",name:'Retail Doggie Bags - 8 x 13" - 12 rolls x 120 bags/roll',soh:9},
-  {code:"CBD864-18",name:'Retail Doggie Bags - 9 x 13" - 48 rolls x 18 per roll',soh:6},
-  {code:"CBR1617-6",name:'16 x 17" RETAIL PACK Compostable Bin Liner w/Easy Tie 24 rolls x 30 per roll 720/cs',soh:12},
+  {code:"CBD1440-120",name:'Retail Doggie Bags 8x13" 12 rolls x 120',soh:9},
+  {code:"CBD864-18",name:'Retail Doggie Bags 9x13" 48 rolls x 18',soh:6},
+  {code:"CBR1617-6",name:'16x17" RETAIL Compostable Bin Liner 720/cs',soh:12},
   {code:"CF-DC-12",name:"Ingeo Round Deli Container 12oz 500/cs",soh:2},
   {code:"CF-DC-16",name:"Ingeo Round Deli Container 16oz 500/cs",soh:6},
   {code:"CF-DC-32",name:"Ingeo Round Deli Container 32oz 500/cs",soh:4},
@@ -318,7 +357,7 @@ const OPENING = [
   {code:"CP-CS-20",name:"Corn Cold Cup 20oz 1000/cs",soh:4},
   {code:"CP-CS-24",name:"Corn Cold Cup 24oz 1000/cs",soh:2},
   {code:"CP-CS-2S",name:"Corn Souffle Cup 2oz 2000/cs",soh:9},
-  {code:"CP-CS-2SF",name:"Flat Souffle Cup, Clear 2oz 2000/cs",soh:2},
+  {code:"CP-CS-2SF",name:"Flat Souffle Cup Clear 2oz 2000/cs",soh:2},
   {code:"CP-CS-3",name:"Corn Cold Cup 3oz 2500/cs",soh:10},
   {code:"CP-CS-32",name:"Corn Cold Cup 32oz 300/cs",soh:3},
   {code:"CP-CS-4S",name:"Corn Souffle Cup 4oz 1000/cs",soh:6},
@@ -327,83 +366,83 @@ const OPENING = [
   {code:"CP-CS-9",name:"Corn Cold Cup 9oz 2000/cs",soh:9},
   {code:"CP-CS-9Q",name:"Corn Cold Cup 9oz Squat 1000/cs",soh:5},
   {code:"CPL-CS-12",name:"Corn Cold Cup Lid w/Straw Hole 10-24oz 1000/cs",soh:13},
-  {code:"CPL-CS-12D",name:"Corn Cold Cup Dome Lid Straw Hole 10-24 oz 1000/cs",soh:6},
-  {code:"CPL-CS-12DP",name:"Corn Cold Cup Dome Lid NO Hole 10-24 oz 1000/cs",soh:4},
+  {code:"CPL-CS-12D",name:"Corn Cold Cup Dome Lid Straw Hole 10-24oz 1000/cs",soh:6},
+  {code:"CPL-CS-12DP",name:"Corn Cold Cup Dome Lid NO Hole 10-24oz 1000/cs",soh:4},
   {code:"CPL-CS-12NS",name:"Corn Cold Cup Sippy Lid 10-24oz 1000/cs",soh:5},
   {code:"CPL-CS-12SH",name:"Corn Cold Cup Lid Souffle Holder 9Q-24oz 1000/cs",soh:5},
-  {code:"CPL-CS-2P",name:"Parfait Insert for 9 oz Tall Cup - 2000/cs",soh:3},
-  {code:"CPL-CS-2S",name:"Corn Souffle Cup Lid 2 & 3oz 2000/cs",soh:11},
-  {code:"CPL-CS-9",name:"Corn Souffle Cup Lid 4-9 oz 2000/cs",soh:8},
-  {code:"CPRT-CS-16",name:"Compostable Cold Cup 16oz Retail Pack Case 12 packs x 20 pieces per pack",soh:9},
-  {code:"CT-SC-U2-LFP",name:'Fiber Box - 8.7" x 6.7" x 2.1" - 400/cs',soh:10},
-  {code:"CTL-CS-3",name:"LID for Fiber Boxes - Clear Ingeo - 400/cs",soh:9},
-  {code:"CTL-SC-U3-LF",name:"LID for Fiber Boxes - Fibre - 400/cs",soh:12},
+  {code:"CPL-CS-2P",name:"Parfait Insert for 9oz Tall Cup 2000/cs",soh:3},
+  {code:"CPL-CS-2S",name:"Corn Souffle Cup Lid 2&3oz 2000/cs",soh:11},
+  {code:"CPL-CS-9",name:"Corn Souffle Cup Lid 4-9oz 2000/cs",soh:8},
+  {code:"CPRT-CS-16",name:"Compostable Cold Cup 16oz Retail Pack Case",soh:9},
+  {code:"CT-SC-U2-LFP",name:'Fiber Box 8.7"x6.7"x2.1" 400/cs',soh:10},
+  {code:"CTL-CS-3",name:"LID for Fiber Boxes Clear Ingeo 400/cs",soh:9},
+  {code:"CTL-SC-U3-LF",name:"LID for Fiber Boxes Fibre 400/cs",soh:12},
   {code:"CU-PA-16",name:"Paper Hot Cups w/compostable lining 16oz 1000/cs",soh:2},
   {code:"CU-PA-8",name:"Paper Hot Cups w/compostable lining 8oz 1000/cs",soh:2},
   {code:"CU-PA-8D",name:"Double Wall Paper Hot Cup w/compostable lining 8oz 1000/cs",soh:1},
   {code:"CU-SC-2N-LFP",name:"Fibre Portion Cup Unbleached 2oz 2000/cs",soh:11},
   {code:"CU-SC-4N-LFP",name:"Fibre Portion Cup Unbleached 4oz 1000/cs",soh:3},
-  {code:"CU-SU-12C",name:"No Tree Sugarcane Paper Cold Cups w/compostable lining 12oz 1000/cs",soh:6},
-  {code:"CU-SU-16C",name:"No Tree Sugarcane Paper Cold Cups w/compostable lining 16oz 1000/cs",soh:6},
-  {code:"CU-SU-22C",name:"No Tree Sugarcane Paper Cold Cups w/compostable lining 22oz 1000/cs",soh:5},
-  {code:"CUL-CS-12D",name:"Dome LID PLA - 12-22 oz Paper Cold Cups, Clear 1000/cs",soh:4},
-  {code:"CUL-CS-12F",name:"Flat LID PLA - 12-22 oz Paper Cold Cups, Clear 1000/cs",soh:6},
-  {code:"CUL-FB-12FGN-LF",name:"LID Fiber - 12-22 oz Paper Cold Cups 1000/cs",soh:7},
-  {code:"CUL-FB-12GN-LF",name:"Fibre Lid for 10-20oz Hot Cups, 1000/cs",soh:1},
-  {code:"CUL-FB-12NS-LF",name:"Sippy LID Fiber - 12-22 oz Paper Cold Cups 1000/cs",soh:1},
-  {code:"CUL-FB-8-LF",name:"Fibre Lid for 8oz Hot Cups, 1000/cs",soh:3},
+  {code:"CU-SU-12C",name:"No Tree Sugarcane Paper Cold Cups 12oz 1000/cs",soh:6},
+  {code:"CU-SU-16C",name:"No Tree Sugarcane Paper Cold Cups 16oz 1000/cs",soh:6},
+  {code:"CU-SU-22C",name:"No Tree Sugarcane Paper Cold Cups 22oz 1000/cs",soh:5},
+  {code:"CUL-CS-12D",name:"Dome LID PLA 12-22oz Paper Cold Cups 1000/cs",soh:4},
+  {code:"CUL-CS-12F",name:"Flat LID PLA 12-22oz Paper Cold Cups 1000/cs",soh:6},
+  {code:"CUL-FB-12FGN-LF",name:"LID Fiber 12-22oz Paper Cold Cups 1000/cs",soh:7},
+  {code:"CUL-FB-12GN-LF",name:"Fibre Lid for 10-20oz Hot Cups 1000/cs",soh:1},
+  {code:"CUL-FB-12NS-LF",name:"Sippy LID Fiber 12-22oz Paper Cold Cups 1000/cs",soh:1},
+  {code:"CUL-FB-8-LF",name:"Fibre Lid for 8oz Hot Cups 1000/cs",soh:3},
   {code:"CUL-SC-2N-LFP",name:"Fibre Lid 2oz Portion Cup 2000/cs",soh:7},
   {code:"CUL-SC-4N-LFP",name:"Fibre Lid 4oz Portion Cup 1000/cs",soh:4},
-  {code:"CURT-PA-12",name:"Paper Hot Cup w/compostable lining 12oz Retail Pack Case 12 packs x 20 pieces per",soh:8},
+  {code:"CURT-PA-12",name:"Paper Hot Cup 12oz Retail Pack Case",soh:8},
   {code:"DC-CS-12",name:"Corn Round Deli Container 12oz 1000/cs",soh:1},
   {code:"DC-CS-16",name:"Corn Round Deli Container 16oz 1000/cs",soh:1},
   {code:"DC-CS-24",name:"Corn Round Deli Container 24oz 500/cs",soh:1},
   {code:"DC-CS-8",name:"Corn Round Deli Container 8oz 1000/cs",soh:1},
   {code:"DCL-CS-12",name:"Corn Round Deli Container Lid 8/12/16oz 1000/cs",soh:3},
-  {code:"DEL",name:'Delta - 10 x 5 x 13" Twisted Paper Handle Bag Kraft 250/cs',soh:6},
+  {code:"DEL",name:'Delta 10x5x13" Twisted Paper Handle Bag Kraft 250/cs',soh:6},
   {code:"FC-12-CA",name:"FSC Paper Bowl w/compostable lining 12oz 500/cs",soh:15},
   {code:"FC-16-CA",name:"FSC Paper Bowl w/compostable lining 16oz 500/cs",soh:8},
   {code:"FC-8-CA",name:"FSC Paper Bowl w/compostable lining 8oz 1000/cs",soh:7},
   {code:"FO-BB-67",name:'6.7" Bamboo Fork 2000/cs',soh:1},
   {code:"FO-PS-6L",name:"Fork PLA/Talc w/Ribbing 200F 1000/cs",soh:15},
   {code:"FO-PS-I",name:"Fork PLA and Talc 200F Individually Wrapped 750/cs",soh:3},
-  {code:"FOF-BB-R-M",name:"Bamboo Fork BILINGUAL Retail Pack Master Case 4 cases x 12 packs x 24 pieces per pack",soh:9},
-  {code:"FTS-18R",name:'Fold Top Bag Sandwich Retail Pack 5.5" x 6.5" Compostable 12 boxes x 100 per box 1200/cs',soh:1},
+  {code:"FOF-BB-R-M",name:"Bamboo Fork BILINGUAL Retail Pack Master Case",soh:9},
+  {code:"FTS-18R",name:'Fold Top Bag Sandwich Retail Pack Compostable 1200/cs',soh:1},
   {code:"H59WN-1",name:"12oz PLA Rectangle Deli Container w/Lid 400/cs",soh:29},
   {code:"H61WN",name:"24oz PLA Rectangle Deli Container w/Lid 250/cs",soh:37},
-  {code:"H84WN-1",name:"64 oz PLA Rectangle Deli Container w/Lid 189/cs",soh:25},
-  {code:"HB1617-6",name:'16 x 17" Compostable Bin Liner 720/cs',soh:11},
-  {code:"HB2125-6",name:'21" x 25" Compostable Bin Liner 480/cs',soh:5},
-  {code:"HB2432-6",name:'24 x 32" Compostable Bin Liner 288/cs',soh:5},
-  {code:"HB2636-8",name:'26 x 36" Compostable Bin Liner 165/cs',soh:3},
-  {code:"HB2844-8",name:'28 x 44" Compostable Bin Liner 135/cs',soh:3},
-  {code:"HB3042-85",name:'30 x 42" Compostable Bin Liner 135/cs',soh:7},
-  {code:"HB3550-85",name:'35" x 50" Compostable Bin Liner 90/cs',soh:6},
-  {code:"HB4248-85",name:'42 x 48" Compostable Bin Liner 80/cs',soh:4},
-  {code:"HB4860-85",name:'48 x 60" Compostable Bin Liner 60/cs',soh:6},
+  {code:"H84WN-1",name:"64oz PLA Rectangle Deli Container w/Lid 189/cs",soh:25},
+  {code:"HB1617-6",name:'16x17" Compostable Bin Liner 720/cs',soh:11},
+  {code:"HB2125-6",name:'21"x25" Compostable Bin Liner 480/cs',soh:5},
+  {code:"HB2432-6",name:'24x32" Compostable Bin Liner 288/cs',soh:5},
+  {code:"HB2636-8",name:'26x36" Compostable Bin Liner 165/cs',soh:3},
+  {code:"HB2844-8",name:'28x44" Compostable Bin Liner 135/cs',soh:3},
+  {code:"HB3042-85",name:'30x42" Compostable Bin Liner 135/cs',soh:7},
+  {code:"HB3550-85",name:'35"x50" Compostable Bin Liner 90/cs',soh:6},
+  {code:"HB4248-85",name:'42x48" Compostable Bin Liner 80/cs',soh:4},
+  {code:"HB4860-85",name:'48x60" Compostable Bin Liner 60/cs',soh:6},
   {code:"HC-4-CA",name:"Paper Hot Cups w/compostable lining 4oz 1000/cs",soh:11},
-  {code:"HCL-1220-CA",name:"Fibre Lid for 10-20oz Hot Cups, 1000/cs",soh:12},
-  {code:"HP-BAG-6CLM-C",name:'Sugarcane Clamshell 6" x 6" x 3" 1-comp 500/cs',soh:38},
-  {code:"HP-BAG-8CLM-C",name:'Sugarcane Clamshell 8" x 8" x 3" 1-comp 200/cs',soh:33},
-  {code:"HP-BAG-9CLM-C",name:'Sugarcane Clamshell 9" x 9" x 3" 1-comp 200/cs',soh:55},
-  {code:"HP-BAG-9CLM6-C",name:'Sugarcane Clamshell 9" x 6" x 3" 1-comp 200/cs',soh:62},
-  {code:"HR1617-6",name:'16" x 17" Compostable Bin Liner w/cores, 4 rolls x 325 each, 1300/cs',soh:3},
+  {code:"HCL-1220-CA",name:"Fibre Lid for 10-20oz Hot Cups 1000/cs",soh:12},
+  {code:"HP-BAG-6CLM-C",name:'Sugarcane Clamshell 6"x6"x3" 1-comp 500/cs',soh:38},
+  {code:"HP-BAG-8CLM-C",name:'Sugarcane Clamshell 8"x8"x3" 1-comp 200/cs',soh:33},
+  {code:"HP-BAG-9CLM-C",name:'Sugarcane Clamshell 9"x9"x3" 1-comp 200/cs',soh:55},
+  {code:"HP-BAG-9CLM6-C",name:'Sugarcane Clamshell 9"x6"x3" 1-comp 200/cs',soh:62},
+  {code:"HR1617-6",name:'16"x17" Compostable Bin Liner w/cores 1300/cs',soh:3},
   {code:"HS-WF1000",name:"Fork Birch Wood 1000/cs",soh:14},
   {code:"HS-WK1000",name:"Knife Birch Wood 1000/cs",soh:10},
   {code:"HS-WS1000",name:"Spoon Birch Wood 1000/cs",soh:8},
   {code:"HSMK-W31-PW",name:"Birch Wood Cutlery Kit (Fork, Knife, Napkin) 250/cs",soh:4},
-  {code:"KL-CS-6N",name:'Corn Clamshell 6" x 6" x 3" 500/cs',soh:2},
-  {code:"KL-CS-8",name:'Corn Clamshell 8" x 8" x 3" 250/cs',soh:2},
-  {code:"KL-CS-95N",name:'Corn Clamshell 9" x 5" x 3" 200/cs',soh:2},
+  {code:"KL-CS-6N",name:'Corn Clamshell 6"x6"x3" 500/cs',soh:2},
+  {code:"KL-CS-8",name:'Corn Clamshell 8"x8"x3" 250/cs',soh:2},
+  {code:"KL-CS-95N",name:'Corn Clamshell 9"x5"x3" 200/cs',soh:2},
   {code:"KN-BB-67",name:'6.7" Bamboo Knife 2000/cs',soh:4},
-  {code:"KN-BB-R-M",name:"Bamboo Knife Retail Pack Master Case 4 cases x 12 packs x 24 pieces per pack",soh:8},
+  {code:"KN-BB-R-M",name:"Bamboo Knife Retail Pack Master Case",soh:8},
   {code:"KN-FB-6-LF",name:'Fibre Knife 6" 1000/cs',soh:3},
   {code:"KN-PS-6L",name:"Knife PLA/Talc w/Ribbing 200F 1000/cs",soh:11},
   {code:"KN-PS-I",name:"Knife PLA and Talc 200F Individually Wrapped 750/cs",soh:26},
-  {code:"NP-SC-DN",name:'100% PCW Paper Dinner Napkins 4 x 8", 3000/cs',soh:4},
-  {code:"NP-SC-LN",name:'100% PCW Paper Lunch Napkins, 6.5" x 6.5", 4500/cs',soh:6},
-  {code:"PCK0816-6",name:'8 x 16" Compostable Produce Bag Flat Seal 4 rolls x 450 bags 1800/cs',soh:4},
-  {code:"PCK1619-6",name:'16 x 19" Compostable Produce Bag Flat Seal 4 rolls x 275 bags 1100/cs',soh:3},
+  {code:"NP-SC-DN",name:'100% PCW Paper Dinner Napkins 4x8" 3000/cs',soh:4},
+  {code:"NP-SC-LN",name:'100% PCW Paper Lunch Napkins 6.5"x6.5" 4500/cs',soh:6},
+  {code:"PCK0816-6",name:'8x16" Compostable Produce Bag 1800/cs',soh:4},
+  {code:"PCK1619-6",name:'16x19" Compostable Produce Bag 1100/cs',soh:3},
   {code:"PL-06-NPFA-CA",name:'Sugarcane Plate PFAS Free 6" 1000/cs',soh:4},
   {code:"PL-07",name:'Sugarcane Plate 7" 1000/cs',soh:2},
   {code:"PL-09-NPFA-CA",name:'Sugarcane Plate PFAS Free 9" 500/cs',soh:19},
@@ -411,32 +450,32 @@ const OPENING = [
   {code:"PL-SC-U6-LFP",name:'Sugarcane Plate 6" 1-comp (UNBLEACHED) 1000/cs',soh:1},
   {code:"PL-SC-U7-LFS",name:'Sugarcane Plate 7" 1-comp (UNBLEACHED) 1000/cs',soh:1},
   {code:"PL-SC-U9-LFP",name:'Fibre Plate 9" 1-comp (UNBLEACHED) 1000/cs',soh:2},
-  {code:"PLRT-SC-9CUP",name:'9" Party Plates w/ Cup Holder Retail Pack Case 12 packs x 12 per pieces per pack',soh:5},
-  {code:"PLRT-SC-U6-M",name:'Ripple Edge Plate 6" Retail Pack Master Case 4 Case x 12 Packs x 20 pieces per pack',soh:8},
-  {code:"PLRTF-SC-U9",name:'Ripple Edge Plate 9" Retail BILINGUAL Pack Case 12 packs x 20 per pieces per pack',soh:1},
+  {code:"PLRT-SC-9CUP",name:'9" Party Plates w/ Cup Holder Retail Pack Case',soh:5},
+  {code:"PLRT-SC-U6-M",name:'Ripple Edge Plate 6" Retail Pack Master Case',soh:8},
+  {code:"PLRTF-SC-U9",name:'Ripple Edge Plate 9" Retail BILINGUAL Pack Case',soh:1},
   {code:"RD-CS-12",name:"Corn Rectangle Deli Container 12oz 900/cs",soh:8},
   {code:"RD-CS-16",name:"Corn Rectangle Deli Container 16oz 900/cs",soh:2},
-  {code:"RD-CS-24",name:"Corn Rectangle Deli Container 24 oz 600/cs",soh:3},
-  {code:"RD-CS-32",name:"Corn Rectangle Deli Container 32 oz 600/cs",soh:1},
-  {code:"RD-CS-48",name:"Corn Rectangle Deli Container 48 oz 400/cs",soh:2},
-  {code:"RD-CS-64",name:"Corn Rectangle Deli Container 64 oz 400/cs",soh:8},
+  {code:"RD-CS-24",name:"Corn Rectangle Deli Container 24oz 600/cs",soh:3},
+  {code:"RD-CS-32",name:"Corn Rectangle Deli Container 32oz 600/cs",soh:1},
+  {code:"RD-CS-48",name:"Corn Rectangle Deli Container 48oz 400/cs",soh:2},
+  {code:"RD-CS-64",name:"Corn Rectangle Deli Container 64oz 400/cs",soh:8},
   {code:"RD-CS-8",name:"Corn Rectangle Deli Container 8oz 900/cs",soh:4},
-  {code:"RDL-CS-24",name:"Corn Rectangle Deli Lid 24-32 oz 600/cs",soh:4},
-  {code:"RDL-CS-48",name:"Corn Rectangle Deli Lid 48/64 oz 400/cs",soh:10},
-  {code:"RDL-CS-8",name:"Corn Rectangle Deli Lid 8/12/16 oz 900/cs",soh:14},
-  {code:"S03WN",name:"FreshServe Easy Seal LID for 32oz Bowl, PLA, 480/cs",soh:10},
-  {code:"S06WN",name:"FreshServe Easy Seal 32oz Bowl, PLA, 480/cs",soh:6},
+  {code:"RDL-CS-24",name:"Corn Rectangle Deli Lid 24-32oz 600/cs",soh:4},
+  {code:"RDL-CS-48",name:"Corn Rectangle Deli Lid 48/64oz 400/cs",soh:10},
+  {code:"RDL-CS-8",name:"Corn Rectangle Deli Lid 8/12/16oz 900/cs",soh:14},
+  {code:"S03WN",name:"FreshServe Easy Seal LID for 32oz Bowl PLA 480/cs",soh:10},
+  {code:"S06WN",name:"FreshServe Easy Seal 32oz Bowl PLA 480/cs",soh:6},
   {code:"SB-CS-16",name:"Corn Salad Bowl 16oz 450/cs",soh:4},
   {code:"SB-CS-24",name:"Corn Salad Bowl 24oz 600/cs",soh:2},
   {code:"SB-CS-32",name:"Corn Salad Bowl 32oz 600/cs",soh:2},
   {code:"SBL-CS-16",name:"Corn Salad Bowl Lid 16oz 450/cs",soh:4},
   {code:"SBL-CS-32",name:"Corn Salad Bowl Lid 24-48oz 600/cs",soh:4},
   {code:"SF-NT-2",name:"No Tree Portion Cup w/compostable lining 2oz 2000/cs",soh:1},
-  {code:"SFL-NT-2",name:"LID Paper for 2 oz No Tree Portion Cup, 1000/case",soh:3},
+  {code:"SFL-NT-2",name:"LID Paper for 2oz No Tree Portion Cup 1000/case",soh:3},
   {code:"SL-PA-LG",name:"100% PCW Paper Sleeves 10-20oz 1000/cs",soh:5},
   {code:"SL-PA-ME",name:"100% PCW Paper Sleeves 8oz 1000/cs",soh:3},
   {code:"SO-PS-B",name:"Soup Spoon PLA and Talc 200F 1000/cs",soh:9},
-  {code:"SP-BB-R-M",name:"Bamboo Spoon Retail Pack Master Case 4 cases x 12 packs x 24 pieces per pack",soh:5},
+  {code:"SP-BB-R-M",name:"Bamboo Spoon Retail Pack Master Case",soh:5},
   {code:"SP-CS-3",name:'Tasting Spoons 3" 120F 3000/cs',soh:3},
   {code:"SP-FB-3-LF",name:'Fibre Sample Spoon 3" 3000/cs',soh:5},
   {code:"SP-FB-6-LF",name:'Fibre Spoon 6" 1000/cs',soh:3},
@@ -447,70 +486,566 @@ const OPENING = [
   {code:"ST-PA-8-K",name:'8" FSC Kraft Paper Straw 6000/case',soh:4},
   {code:"ST-PA-8W-K",name:'8" FSC Kraft Paper Straw WRAPPED 6000/case',soh:4},
   {code:"STRE-CT-6BK",name:'6" FSC Paper Straw 4000/case',soh:3},
-  {code:"STRT-PA-8-K-M",name:'8" Compostable Kraft Paper Straws Retail Master Case 4 cases x 24 packs x 50 pieces per pack',soh:3},
+  {code:"STRT-PA-8-K-M",name:'8" Compostable Kraft Paper Straws Retail Master Case',soh:3},
   {code:"SW-NT-M",name:"NoTree Medium Sandwich Wedge with PLA Window 500/cs",soh:3},
-  {code:"SYD",name:'Sydney - 13 x 7 x 13" Twisted Paper Handle Bag Kraft 250/cs',soh:1},
-  {code:"TO-NT-1",name:"NoTree #1 Bamboo Paper Fold Top Containers w/compostable lining 450/cs",soh:2},
-  {code:"TO-NT-1W",name:"NoTree Paper #1 Take-Out Container with PLA Window (26oz) Bamboo Paper 200/cs",soh:2},
-  {code:"TO-NT-3",name:"NoTree #3 Bamboo Paper Fold Top Containers w/compostable lining 200/cs",soh:1},
-  {code:"TO-NT-3W",name:"NoTree Paper #3 Take-Out Container with PLA Window (65oz) Bamboo Paper 200/cs",soh:7},
-  {code:"TO-NT-4",name:"NoTree #4 Bamboo Paper Fold Top Containers w/compostable lining 160/cs",soh:5},
-  {code:"TO-NT-8",name:"NoTree #8 Bamboo Paper Fold Top Containers w/compostable lining 300/cs",soh:2},
-  {code:"TO-NT-8W",name:"NoTree Paper #8 Take-Out Container with PLA Window (46oz) Bamboo Paper 200/cs",soh:9},
+  {code:"SYD",name:'Sydney 13x7x13" Twisted Paper Handle Bag Kraft 250/cs',soh:1},
+  {code:"TO-NT-1",name:"NoTree #1 Bamboo Paper Fold Top Containers 450/cs",soh:2},
+  {code:"TO-NT-1W",name:"NoTree Paper #1 Take-Out Container with PLA Window 200/cs",soh:2},
+  {code:"TO-NT-3",name:"NoTree #3 Bamboo Paper Fold Top Containers 200/cs",soh:1},
+  {code:"TO-NT-3W",name:"NoTree Paper #3 Take-Out Container with PLA Window 200/cs",soh:7},
+  {code:"TO-NT-4",name:"NoTree #4 Bamboo Paper Fold Top Containers 160/cs",soh:5},
+  {code:"TO-NT-8",name:"NoTree #8 Bamboo Paper Fold Top Containers 300/cs",soh:2},
+  {code:"TO-NT-8W",name:"NoTree Paper #8 Take-Out Container with PLA Window 200/cs",soh:9},
   {code:"TO-SC-T3-LFS",name:"Plant Fibre 3 Compartment Taco Tray 300/case",soh:2},
-  {code:"TO-SC-U34D-LFP",name:'Fibre Clamshell 9" x 6" x 3" 2-comp 500/cs',soh:3},
-  {code:"TR-SC-U10T",name:'Plant Fibre Three Compartment Tray, 9.8" x 7.5", 400/cs',soh:10},
-  {code:"TR-SC-U8-LFS",name:'Plant Fibre One Compartment Tray, 8x6x1.5", 400/cs',soh:2},
-  {code:"TR-SC-UAR-LFS",name:'Plant Fibre Boat Tray Unbleached 6.5" x 5" x 1.5" 600/cs',soh:3},
-  {code:"TRL-CS-10T",name:'Ingeo Three Compartment Tray Lid, 10" x 7.5", 400/cs',soh:10},
-  {code:"TRL-CS-8",name:'Ingeo One Compartment Tray LID, 8x6", 400/cs',soh:2},
-  {code:"TRL-SC-8-LF",name:'Plant Fibre LID for Tray, 8x6x1.5", 400/cs',soh:2},
-  {code:"TRL-SC-UAR-LF",name:'Plant Fibre Boat Tray LID Unbleached 6.5" x 5" x 1.5" 600/cs',soh:4},
-  {code:"VAN",name:'Vanity - 10 x 5 x 13" Twisted Paper Handle Bag Kraft 250/cs',soh:2},
-  {code:"VWPLATS",name:"Regular platter box and insert w/PLA Window (12.2 x 8.9 x 3.2in)",soh:1},
+  {code:"TO-SC-U34D-LFP",name:'Fibre Clamshell 9"x6"x3" 2-comp 500/cs',soh:3},
+  {code:"TR-SC-U10T",name:'Plant Fibre Three Compartment Tray 9.8"x7.5" 400/cs',soh:10},
+  {code:"TR-SC-U8-LFS",name:'Plant Fibre One Compartment Tray 8x6x1.5" 400/cs',soh:2},
+  {code:"TR-SC-UAR-LFS",name:'Plant Fibre Boat Tray Unbleached 6.5"x5"x1.5" 600/cs',soh:3},
+  {code:"TRL-CS-10T",name:'Ingeo Three Compartment Tray Lid 10"x7.5" 400/cs',soh:10},
+  {code:"TRL-CS-8",name:'Ingeo One Compartment Tray LID 8x6" 400/cs',soh:2},
+  {code:"TRL-SC-8-LF",name:'Plant Fibre LID for Tray 8x6x1.5" 400/cs',soh:2},
+  {code:"TRL-SC-UAR-LF",name:'Plant Fibre Boat Tray LID Unbleached 6.5"x5"x1.5" 600/cs',soh:4},
+  {code:"VAN",name:'Vanity 10x5x13" Twisted Paper Handle Bag Kraft 250/cs',soh:2},
+  {code:"VWPLATS",name:"Regular platter box and insert w/PLA Window",soh:1},
   {code:"W-HC-10-CA",name:"Paper Hot Cups w/compostable lining 10oz 1000/cs",soh:15},
   {code:"W-HC-12-CA",name:"White Paper Hot Cups w/compostable lining 12oz 1000/cs",soh:14},
   {code:"W-HC-16-CA",name:"Paper Hot Cups w/compostable lining 16oz 1000/cs",soh:11},
   {code:"W-HC-8-CA",name:"Paper Hot Cups w/compostable lining 8oz 1000/cs",soh:8},
 ];
 
+// ── Opening Inventory — Funding Innovations May 1 2026 ─────────────────────
+const OPENING_FUNDING = [
+  {code:"AM-001",name:"Teddy by Angus Morrison",soh:0},
+  {code:"AV-001",name:"Marvel Superhero signed Kurt Lehner",soh:0},
+  {code:"BA-22",name:"Mother Moon by Betty Albert",soh:0},
+  {code:"FP-400",name:"Teaching by Frank Polson",soh:0},
+  {code:"NR-R11",name:"Christmas Wonder",soh:0},
+  {code:"VR-300",name:"Vintage Avro Arrow",soh:0},
+  {code:"17-002",name:"Cash Lasercut",soh:0},
+  {code:"17-003",name:"Laurentian Village",soh:0},
+  {code:"17-004",name:"Silence is Golden",soh:0},
+  {code:"17-005",name:"Bob Marley Acoustic",soh:0},
+  {code:"17-009",name:"White Pine",soh:0},
+  {code:"17-010",name:"Winter Morning",soh:0},
+  {code:"17-012",name:"Northern River",soh:0},
+  {code:"17-014",name:"Ragamuffin",soh:1},
+  {code:"17-015",name:"The Canoe",soh:0},
+  {code:"17-036",name:"Sacred Salmon",soh:0},
+  {code:"17-059",name:"Lake and Mountains",soh:3},
+  {code:"17-089",name:"Red House, Winter",soh:0},
+  {code:"17-095",name:"Mount Thule",soh:1},
+  {code:"17-100",name:"The Sound of Thunder",soh:0},
+  {code:"17-112",name:"Bon Echoe",soh:0},
+  {code:"17-115",name:"LIght and Shadow",soh:0},
+  {code:"17-121",name:"Clarence Gagnon",soh:0},
+  {code:"17-124",name:"Stand Tall",soh:0},
+  {code:"17-126",name:"Loon on Display",soh:0},
+  {code:"17-140",name:"Frosty Morning",soh:0},
+  {code:"17-144",name:"Cash San Quintin",soh:0},
+  {code:"17-155",name:"Beatles Jumping",soh:0},
+  {code:"17-164",name:"Wonder Woman",soh:0},
+  {code:"17-172",name:"Winter Arrives",soh:0},
+  {code:"17-174",name:"ACDC 1979 Live",soh:0},
+  {code:"17-175",name:"Marvel Classic",soh:0},
+  {code:"17-189",name:"Superhero Lunch",soh:1},
+  {code:"17-190",name:"The Beatles Liverpool",soh:0},
+  {code:"17-191",name:"Queen Seated",soh:0},
+  {code:"17-193",name:"Northern Sunset",soh:0},
+  {code:"17-202",name:"Pink Floyd - Wish you were here",soh:0},
+  {code:"17-203",name:"Triple - Maud Lewis",soh:1},
+  {code:"17-204",name:"The Pines",soh:0},
+  {code:"17-205",name:"Marley Relaxing",soh:1},
+  {code:"17-207",name:"The Harbour",soh:0},
+  {code:"17-213",name:"ACDC Tour Collage",soh:0},
+  {code:"17-214",name:"A September Gale",soh:0},
+  {code:"17-220",name:"Soccer",soh:0},
+  {code:"17-221",name:"Bob Marley - Tough Going",soh:0},
+  {code:"17-223",name:"Raven",soh:0},
+  {code:"17-226",name:"Lezione Di Acquerio",soh:0},
+  {code:"17-230",name:"Coastal Scene",soh:5},
+  {code:"17-236",name:"Keeping the Family Together",soh:0},
+  {code:"17-237",name:"Winter in the Northland",soh:0},
+  {code:"17-238",name:"Winter Scene",soh:0},
+  {code:"17-239",name:"Family Teaching",soh:0},
+  {code:"17-240",name:"Led Zeppelin Jet Plane",soh:0},
+  {code:"17-241",name:"Fish Clan by Frank Polson",soh:0},
+  {code:"17-242",name:"Going Home",soh:0},
+  {code:"17-243",name:"Prince - Joe Louis Arena",soh:0},
+  {code:"17-244",name:"Marley Live Brighten",soh:0},
+  {code:"17-245",name:"Snow Fall",soh:0},
+  {code:"17-246",name:"Bear Deer Fish",soh:1},
+  {code:"17-247",name:"Village in Winter",soh:0},
+  {code:"17-250",name:"Pink Floyd - Portraits",soh:0},
+  {code:"17-251",name:"Pink Floyd Rainbow",soh:0},
+  {code:"17-254",name:"ACDC Power UP",soh:0},
+  {code:"17-258",name:"Bob Marley - Iron, Lion, Zion",soh:0},
+  {code:"17-260",name:"Sacred Journey",soh:0},
+  {code:"17-261",name:"Harbour Scene",soh:0},
+  {code:"17-263",name:"Micheal Jordan - Timeline",soh:0},
+  {code:"17-268",name:"Team of Oxen",soh:0},
+  {code:"17-270",name:"Curse of Frankenstein",soh:0},
+  {code:"17-271",name:"Pink Floyd at the Marque",soh:0},
+  {code:"17-272",name:"Micheal Jordan Sketch",soh:0},
+  {code:"17-273",name:"Summer Breeze",soh:0},
+  {code:"17-275",name:"The West Wind",soh:0},
+  {code:"17-277",name:"Three Clans Meet",soh:0},
+  {code:"17-280",name:"Triple Summer Coastal - Maud Lewis",soh:0},
+  {code:"17-284",name:"Pines & Poplars",soh:0},
+  {code:"17-285",name:"Shaman Thunderbird",soh:0},
+  {code:"17-286",name:"Digby Harbour",soh:0},
+  {code:"17-287",name:"Bountiful Harvest",soh:0},
+  {code:"17-289",name:"Beaver Dam",soh:0},
+  {code:"17-290",name:"A Lily Pond",soh:0},
+  {code:"17-291",name:"Flowers in a Pot",soh:0},
+  {code:"17-292",name:"Nature by Frank Polson",soh:0},
+  {code:"17-293",name:"The Pool",soh:0},
+  {code:"17-294",name:"Hillside Village",soh:1},
+  {code:"17-295",name:"Cranberry Lake",soh:0},
+  {code:"17-296",name:"Beaver Swamp",soh:0},
+  {code:"17-297",name:"Run Rabbit Run",soh:0},
+  {code:"17-298",name:"Autumn Leaves",soh:0},
+  {code:"17-299",name:"Ice House",soh:2},
+  {code:"17-300",name:"Maligne Lake",soh:0},
+  {code:"17-301",name:"Maud Lewis Black Truck",soh:0},
+  {code:"17-302",name:"Historical Reunion",soh:0},
+  {code:"17-303",name:"Without Equal",soh:0},
+  {code:"17-304",name:"Train Through Town",soh:1},
+  {code:"17-306",name:"Superheros Playing Pool",soh:0},
+  {code:"17-307",name:"All Children Matter",soh:0},
+  {code:"17-308",name:"Pink Floyd Prism",soh:0},
+  {code:"17-309",name:"Melody of the Night",soh:0},
+  {code:"17-310",name:"Elvis B&W",soh:0},
+  {code:"17-311",name:"Golden Lab",soh:0},
+  {code:"17-312",name:"Horse & Buggy",soh:0},
+  {code:"17-313",name:"Bear & Sun",soh:0},
+  {code:"17-314",name:"B&W Tiger",soh:0},
+  {code:"17-315",name:"Marvel Collage",soh:0},
+  {code:"17-316",name:"Marley Redemption",soh:3},
+  {code:"17-317",name:"Slash",soh:0},
+  {code:"17-318",name:"On the Scent",soh:1},
+  {code:"17-321",name:"DC Comic Justice League",soh:0},
+  {code:"17-324",name:"Three Black Cats",soh:0},
+  {code:"17-325",name:"Pic Island",soh:0},
+  {code:"17-326",name:"Street Fall Scene",soh:0},
+  {code:"17-327",name:"The Little Falls",soh:0},
+  {code:"17-328",name:"Whisper of the Branches",soh:0},
+  {code:"17-329",name:"Digby Gut - Maud Lewis",soh:0},
+  {code:"17-330",name:"Hang Loose",soh:1},
+  {code:"17-331",name:"Red Rain",soh:0},
+  {code:"17-332",name:"Queen Brazil",soh:0},
+  {code:"17-333",name:"KISS",soh:0},
+  {code:"17-335",name:"Island Georgian Bay by Franklin Carmichael",soh:0},
+  {code:"17-337",name:"East and West Loons",soh:0},
+  {code:"17-339",name:"Three White Cats",soh:0},
+  {code:"17-340",name:"The Dance - Cecil Lvey",soh:0},
+  {code:"17-341",name:"Autumn Woods",soh:1},
+  {code:"17-342",name:"Farmhouse at Dusk",soh:1},
+  {code:"17-424",name:"Living on the Edge",soh:7},
+  {code:"17-345",name:"Mountain in Snow",soh:0},
+  {code:"17-347",name:"Cattle Drive by CR Townsend",soh:0},
+  {code:"17-348",name:"October by AJ Casson",soh:0},
+  {code:"17-349",name:"Turtle Mother",soh:0},
+  {code:"17-352",name:"Two Deer, Sunset",soh:0},
+  {code:"17-353",name:"Birds & Fish",soh:1},
+  {code:"17-356",name:"Male & Female Cardinals",soh:0},
+  {code:"17-357",name:"Taj Mahal",soh:0},
+  {code:"17-359",name:"Erie Train by Maud Lewis",soh:0},
+  {code:"17-360",name:"Street in Barrie by Lawren Harris",soh:1},
+  {code:"17-361",name:"Taylor Swift Eras Tour",soh:1},
+  {code:"17-362",name:"Beachy Keen by CR Townsend",soh:1},
+  {code:"17-364",name:"Autumn in Algoma",soh:0},
+  {code:"17-365",name:"Elvis Playing Guitar",soh:2},
+  {code:"17-366",name:"Taylor Swift Albums",soh:0},
+  {code:"17-368",name:"Best Friend at Sunset",soh:0},
+  {code:"17-370",name:"Old Storm Salem",soh:0},
+  {code:"17-372",name:"Whitetail Deer - A Golden Moment",soh:0},
+  {code:"17-373",name:"Old House Parry Sound",soh:0},
+  {code:"17-378",name:"Street in Glen Williams",soh:0},
+  {code:"17-379",name:"Ontario Village",soh:1},
+  {code:"17-380",name:"On the Fence",soh:0},
+  {code:"17-381",name:"Cats Away - CR Townsend",soh:1},
+  {code:"17-382",name:"A Bear's Journey - Triple",soh:0},
+  {code:"17-384",name:"Triple - Cats by Maud Lewis",soh:0},
+  {code:"17-385",name:"Dog is Love",soh:2},
+  {code:"17-386",name:"Cree Wolf by Carla Joseph",soh:0},
+  {code:"17-388",name:"Butterflies by Maud Lewis",soh:1},
+  {code:"17-389",name:"Serenity",soh:1},
+  {code:"17-391",name:"Led Zeppelin Earls Court",soh:0},
+  {code:"17-392",name:"Top of the Hill",soh:0},
+  {code:"17-393",name:"Led Zeppelin Stariway",soh:0},
+  {code:"17-394",name:"Taylor Swift Reputation",soh:0},
+  {code:"17-395",name:"Sunglass Mutt by CR Townsend",soh:1},
+  {code:"17-398",name:"Red Cart at Digby GUT",soh:0},
+  {code:"17-403",name:"Spirit Whale",soh:0},
+  {code:"17-404",name:"Bear & Cubs",soh:0},
+  {code:"17-405",name:"Fleetwood Mac w Silver LP",soh:0},
+  {code:"17-406",name:"Metallica Ride the Lightning",soh:1},
+  {code:"17-407",name:"ACDC Back in Black",soh:1},
+  {code:"17-408",name:"Duck & Cover",soh:2},
+  {code:"17-409",name:"1-800 EWE Guys by CR Townsend",soh:0},
+  {code:"17-410",name:"ACDC in Rock we Trust",soh:1},
+  {code:"17-412",name:"Jays of Midnight",soh:2},
+  {code:"17-413",name:"Soulmate",soh:1},
+  {code:"17-414",name:"Beatles Let it Be Studio",soh:2},
+  {code:"17-419",name:"The Cardinals",soh:4},
+  {code:"17-420",name:"Aerosmith",soh:6},
+  {code:"18-001",name:"Port Prim / The Pier",soh:1},
+  {code:"18-002",name:"Train Through Town/Winter Scene Print Set",soh:2},
+  {code:"18-003",name:"Three White Cats/3Black Cats Print Set",soh:1},
+  {code:"18-004",name:"SImpsons Print Set",soh:2},
+  {code:"18-005",name:"Cree Wolf Call",soh:1},
+  {code:"18-006",name:"Laurentian Village/Winter Morning Print Set",soh:1},
+  {code:"18-007",name:"Come Together/United Connected",soh:3},
+  {code:"18-008",name:"Hang Loose/Sunglass Mutt",soh:3},
+  {code:"38-401",name:"Pine Island by Tom Thomson",soh:0},
+  {code:"38-417",name:"The Rottweiler",soh:0},
+  {code:"38-470",name:"Dream Garage",soh:0},
+  {code:"38-476",name:"Dog is Love",soh:0},
+  {code:"38-492",name:"Lying Lab",soh:0},
+  {code:"38-494",name:"Air Jordans",soh:0},
+  {code:"38-496",name:"Rottie Pup",soh:1},
+  {code:"38-497",name:"Starry Lab",soh:0},
+  {code:"38-498",name:'27" Russo Print',soh:0},
+  {code:"38-499",name:"Golden Lab",soh:0},
+  {code:"38-500",name:"Sweet D",soh:0},
+  {code:"38-503",name:"Head in the Clouds",soh:0},
+  {code:"38-516",name:"The Star Framed Print by Degas",soh:0},
+  {code:"38-519",name:"American Auto",soh:0},
+  {code:"38-520",name:"Stormy Weather",soh:0},
+  {code:"38-521",name:"Cat with Glasses",soh:0},
+  {code:"38-522",name:"Boston Terrier with Glasses",soh:0},
+  {code:"38-523",name:"Vintage Map of Canada",soh:0},
+  {code:"38-526",name:"The Beach as Sainte-Adresse",soh:0},
+  {code:"38-527",name:"Dog w/ Glasses",soh:0},
+  {code:"38-528",name:"Happy Cat",soh:0},
+  {code:"38-529",name:"Sneaker Legends",soh:0},
+  {code:"38-530",name:"Blue Umbrella",soh:0},
+  {code:"38-616",name:"Winter Skating Maud Lewis",soh:1},
+  {code:"38-618",name:"Curtis B8 Motorcycle",soh:0},
+  {code:"38-619",name:"White Village",soh:0},
+  {code:"38-621",name:"A Rainy Afternoon - Katerina Mertikas",soh:0},
+  {code:"38-622",name:"Woofing Along the River",soh:0},
+  {code:"38-623",name:"Neon Dog",soh:0},
+  {code:"38-624",name:"Kempenfelt Bay",soh:0},
+  {code:"38-625",name:"Black & White Cat - maud Lewis",soh:0},
+  {code:"38-626",name:"The North Channel at Birch Island",soh:0},
+  {code:"38-627",name:"Triple Summer Collage",soh:0},
+  {code:"38-628",name:"Apple Time - Maud Lewis",soh:0},
+  {code:"38-629",name:"Be Who You Be - Sam Toft",soh:0},
+  {code:"38-630",name:"Loggers Cull - Emily Carr",soh:0},
+  {code:"38-632",name:"Fall Scene Triple - AJ Casson",soh:1},
+  {code:"38-633",name:"Snow Train",soh:0},
+  {code:"38-643",name:"Triple Black Cats by Lynda Smith",soh:0},
+  {code:"38-644",name:"Triple Boats & Harbours",soh:0},
+  {code:"38-645",name:"A Nice Day For It - Sam Toft",soh:0},
+  {code:"38-646",name:"Blue Bird by Maud Lewis",soh:0},
+  {code:"38-649",name:"Spring",soh:0},
+  {code:"38-650",name:"White Cat with Flowers",soh:1},
+  {code:"38-651",name:"Loon Brooding by Cecil Ivey",soh:0},
+  {code:"38-652",name:"Yellowbirds Framed Print by Maud Lewis",soh:5},
+  {code:"38-653",name:"Three Mile Lake",soh:1},
+  {code:"38-659",name:"Horses Framed Print by Maud Lewis",soh:1},
+  {code:"38-661",name:"On the Run",soh:1},
+  {code:"38-842",name:"Historic Highway",soh:4},
+  {code:"38-849",name:"Vintage Cars Triple",soh:3},
+  {code:"40-001",name:"Batman Comic",soh:0},
+  {code:"40-002",name:"Superman Comic Book",soh:0},
+  {code:"40-009",name:"DC Comic Book",soh:0},
+  {code:"40-010",name:"Justice League Four Comic",soh:0},
+  {code:"40-013",name:"Justice League Comic",soh:0},
+  {code:"40-014",name:"Batman Villians",soh:0},
+  {code:"40-016",name:"Mickey Mouse Collage",soh:0},
+  {code:"40-018",name:"Star Wars Comic",soh:0},
+  {code:"40-022",name:"Justice League Superhero",soh:0},
+  {code:"40-023",name:"Star Wars Comic Book Collage",soh:0},
+  {code:"40-027",name:"Justice League of America",soh:0},
+  {code:"40-030",name:"DC Super Villians Collage",soh:0},
+  {code:"50-275",name:"Baby Yoda",soh:0},
+  {code:"50-276",name:"Pink Floyd Splash",soh:0},
+  {code:"50-281",name:"Marvel Character",soh:0},
+  {code:"50-286",name:"Johnny Cash Walk the Line",soh:0},
+  {code:"50-288",name:"Pink Floyd Division",soh:0},
+  {code:"50-289",name:"Bob Marley Abstraction",soh:0},
+  {code:"50-291",name:"Marvel Universe",soh:0},
+  {code:"50-292",name:"Pink Floyd Radio City",soh:0},
+  {code:"50-298",name:"Led Zeppelin 1955",soh:0},
+  {code:"50-300",name:"Metallica Master of Puppets",soh:0},
+  {code:"50-301",name:"Marvel Positive Affirmation",soh:0},
+  {code:"50-303",name:"Johnny Cash - Lonely Walk",soh:1},
+  {code:"50-308",name:"Pink Floyd Division Bell",soh:0},
+  {code:"50-309",name:"Beatles Posed",soh:0},
+  {code:"50-310",name:"The Beatles Disco",soh:0},
+  {code:"50-312",name:"Pink Floyd DSOTM",soh:0},
+  {code:"50-313",name:"Spiderman Spiderwebb",soh:0},
+  {code:"50-314",name:"Nightmare Before Christmas",soh:0},
+  {code:"50-316",name:"Mickey Mouse Splatter",soh:0},
+  {code:"50-317",name:"Star Wards Action Figures",soh:0},
+  {code:"50-318",name:"Bob Marley Splatter",soh:0},
+  {code:"50-319",name:"Pink Floyd Gold LP",soh:0},
+  {code:"50-321",name:"Beatles Let it Be",soh:1},
+  {code:"50-323",name:"Abby Road",soh:0},
+  {code:"50-324",name:"Johnny Cash - Men in Black",soh:1},
+  {code:"50-325",name:"Beatles Disco Jumping",soh:0},
+  {code:"50-328",name:"ACDC Highway to Hell",soh:0},
+  {code:"50-332",name:"Pink Floyd - The Wall",soh:0},
+  {code:"50-333",name:"Johnny Cash Live in Concert",soh:0},
+  {code:"50-335",name:"Stevie Nicks",soh:2},
+  {code:"50-336",name:"Freddie Mercury Salute",soh:0},
+  {code:"50-337",name:"Star Wars Covers",soh:0},
+  {code:"50-341",name:"Queen II Gold",soh:4},
+  {code:"50-342",name:"Beatles Sgt Pepper",soh:4},
+  {code:"50-343",name:"Bob Marley Live PLatinum",soh:0},
+  {code:"50-346",name:"Led Zeppelin Stairway",soh:0},
+  {code:"50-347",name:"Johnny Cash American",soh:0},
+  {code:"50-348",name:"Johnny Cash Folsum Prison",soh:0},
+  {code:"50-349",name:"Spiderman in the Webs",soh:0},
+  {code:"50-352",name:"X-Men",soh:0},
+  {code:"50-353",name:"Marvel Superheros Busting out Frame",soh:1},
+  {code:"50-354",name:"Johnny Cash Folsum (B&W)",soh:4},
+  {code:"50-356",name:"Motley Crew Shout at the Devil",soh:1},
+  {code:"50-362",name:"Fleetwood Mac",soh:1},
+  {code:"50-363",name:"The Beatles - Get Back",soh:0},
+  {code:"50-364",name:"Deadpool Kills Deadpool",soh:2},
+  {code:"50-365",name:"Pink Floyd - Dark Side of the Moon",soh:0},
+  {code:"50-366",name:'Johnny Cash - "The Man" Close up w/ Gold Record',soh:0},
+  {code:"50-367",name:"Elvis & Michael Jackson w/ Gold LP",soh:1},
+  {code:"50-368",name:"Beatles Faces w/ Gold LP",soh:0},
+  {code:"50-369",name:"Weezer - Pinkerton Studio Album",soh:0},
+  {code:"50-370",name:"Bob Marley Tri-Color",soh:0},
+  {code:"50-371",name:"Metallica Cross w/ Platinum Record",soh:4},
+  {code:"50-372",name:"Bob Dylan - London Tour",soh:0},
+  {code:"50-373",name:"Beatles Standing Black & White",soh:0},
+  {code:"50-374",name:"Guns N Roses Use Your Illusions",soh:4},
+  {code:"50-375",name:"Metallica Black & White",soh:7},
+  {code:"50-376",name:"ACDC Framed Album Covers",soh:4},
+  {code:"50-377",name:"Elvis Hips w/ Platinum Record",soh:0},
+  {code:"50-378",name:"Star Wars: Saga - Character Collage",soh:0},
+  {code:"50-379",name:"Elvis Hugging",soh:0},
+  {code:"50-380",name:"Rolling Stones Framed Lips w/ Gold LP",soh:0},
+  {code:"50-385",name:"Metallica Black & White w/ Silver Record",soh:0},
+  {code:"50-386",name:"Taylor Swift 1989 Album Cover",soh:0},
+  {code:"50-387",name:"Deadpool and Wolverine",soh:1},
+  {code:"50-417",name:"ACDC - Black Ice",soh:3},
+  {code:"50-427",name:"Stevie Nicks Black & White",soh:0},
+  {code:"50-428",name:"Blondie Live in LA",soh:0},
+  {code:"50-429",name:"Taylor Swift World Tour",soh:0},
+  {code:"50-430",name:"Green Day American Idiot",soh:0},
+  {code:"50-432",name:"QUEEN - Live Magic",soh:0},
+  {code:"50-434",name:"KISS On Stage",soh:1},
+  {code:"50-435",name:"Legendary Music Artists",soh:0},
+  {code:"50-436",name:"Axel Rose Guns",soh:1},
+  {code:"50-437",name:"Bob Dylan Concert",soh:0},
+  {code:"50-464",name:"Linkin Park Meteora",soh:1},
+  {code:"50-465",name:"The Beatles Yellow Submarine",soh:1},
+  {code:"50-467",name:"Bon Jovi Living on a Prayer",soh:5},
+  {code:"50-468",name:"Johnny Cash in Studio",soh:3},
+  {code:"50-469",name:"Johnny Cash Walk the Line",soh:3},
+  {code:"50-470",name:"Ozzy Osborne Skull",soh:1},
+  {code:"50-472",name:"Black Sabbath",soh:1},
+  {code:"50-559",name:"Star Wars Vintage",soh:0},
+  {code:"50-628",name:"RUSH First Album",soh:0},
+  {code:"50-632",name:"RUSH Triple Black",soh:0},
+  {code:"50-634",name:"RUSH Photo Collage Gold",soh:0},
+  {code:"50-635",name:"RUSH Signals 40th",soh:0},
+  {code:"50-636",name:"RUSH Clockwork",soh:0},
+  {code:"50-637",name:"RUsh Moving Pictures",soh:0},
+  {code:"50-643",name:"RUSH 50th Anni. Album Collage",soh:0},
+  {code:"50-644",name:"RUSH 50th Anni. Photo and Album Collage",soh:1},
+  {code:"61-406",name:"Orr Flying Goal",soh:0},
+  {code:"63-733",name:"Toronto Maple Leafs",soh:0},
+  {code:"64-195",name:"Original 6 Buildings",soh:0},
+  {code:"64-274",name:"Original 6 Playing Cards",soh:0},
+  {code:"68-368",name:"Jordan M Sports Illustrated",soh:0},
+  {code:"68-370",name:"Jordan & Bryants",soh:0},
+  {code:"68-372",name:"Bryants K - Resting",soh:0},
+  {code:"68-375",name:"Lebron James Slam",soh:0},
+  {code:"68-376",name:"Jordan M 6 Time Champ",soh:0},
+  {code:"68-377",name:"Basketball Superstars",soh:4},
+  {code:"68-379",name:"NBA Superstars",soh:0},
+  {code:"68-403",name:"Michael Jordan Championship Piece",soh:0},
+  {code:"68-685",name:"Toronto Blue Jays 2025 ALCS",soh:1},
+  {code:"68-687",name:"Toronto Blue Jays Best Moments 2025",soh:3},
+  {code:"68-813",name:"TBJ-Home Run Legends",soh:0},
+  {code:"71-164",name:"Muhammed Ali",soh:0},
+  {code:"71-220",name:"Soccer Superstars",soh:0},
+  {code:"73-994",name:"Crosby Golden Goal",soh:0},
+  {code:"75-089",name:"McDavid / Gretzky Canvas",soh:0},
+  {code:"81-210",name:"OIlers 1988",soh:0},
+  {code:"81-211",name:"Stanley Cup 1993 Canadiens Framed Collage",soh:0},
+  {code:"81-221",name:"Original Six Stanley Cup",soh:0},
+  {code:"81-224",name:"Legends of the Net",soh:0},
+  {code:"81-228",name:"Orr B Evolution",soh:0},
+  {code:"81-231",name:"Gretzky, W Framed Print Four-Time Stanley Cup",soh:0},
+  {code:"81-237",name:"Best of the Best",soh:0},
+  {code:"81-238",name:"Original 6 Goalies",soh:0},
+  {code:"81-239",name:"Oilers Stanely Cup",soh:0},
+  {code:"81-240",name:"MTL Stanley Cup 1993",soh:0},
+  {code:"81-241",name:"Gretzky Jersey Evolution",soh:0},
+  {code:"81-243",name:"Gretzky Stats",soh:0},
+  {code:"81-245",name:"Orr B Bruins 100",soh:0},
+  {code:"81-246",name:"Original 6 Players",soh:0},
+  {code:"81-247",name:"Orr B Skyline",soh:0},
+  {code:"81-248",name:"Gretzky Close Up",soh:0},
+  {code:"81-249",name:"Orr B (B&W) Collage",soh:0},
+  {code:"81-250",name:"Gilmore Maple Leafs",soh:0},
+  {code:"81-270",name:"Orr Ratio",soh:0},
+  {code:"81-277",name:"Gretzky FInal Game",soh:0},
+  {code:"81-278",name:"800 Goal Club - Howe/Gretzky/Ovechkin Collage",soh:1},
+  {code:"81-283",name:"Gretzky Career Card",soh:3},
+  {code:"81-288",name:"Bobby Orr Trophies",soh:0},
+  {code:"81-294",name:"Gretzky/McDavid Double Frame Set",soh:0},
+  {code:"81-295",name:"Oilers Western Champs",soh:0},
+  {code:"81-297",name:"Montreal Canadian Stanley",soh:0},
+  {code:"81-303",name:"Edmonton Oilers First Stanley Cup",soh:0},
+  {code:"81-305",name:"ORR Framed Photo Collage",soh:1},
+  {code:"81-504",name:"Oilers Five Players",soh:0},
+  {code:"81-519",name:"McDavid Draisaitl",soh:0},
+  {code:"81-523",name:"McDavid Alternate Jersey",soh:0},
+  {code:"81-524",name:"Crosby 500",soh:0},
+  {code:"81-528",name:"Edmonton Oilers Stanley Cup Scoresheet",soh:0},
+  {code:"81-536",name:"McDavid Gretzky",soh:0},
+  {code:"81-537",name:"Calgary Flames 4 Player Collage",soh:1},
+  {code:"81-546",name:"McDavid, C Framed 2023 Awards Collage",soh:0},
+  {code:"81-550",name:"Edmonton Oilers - Captains Row",soh:0},
+  {code:"81-553",name:"McDavid First Goal Collage",soh:0},
+  {code:"81-555",name:"McDavid & Gretzky - Award by Numbers",soh:0},
+  {code:"81-560",name:"Bedard First Goal Scoresheet",soh:0},
+  {code:"81-563",name:"NHL Heritage Classic",soh:0},
+  {code:"81-568",name:"McDavid, Steet Art Oilers Collage",soh:1},
+  {code:"81-575",name:"OIlers Western Conference",soh:0},
+  {code:"81-584",name:"McDavid C 2024 Conn Smyth Framed Collage",soh:1},
+  {code:"81-589",name:"McDavid 1000th Point",soh:1},
+  {code:"81-591",name:"Edmonton Oilers Hart Trophy",soh:0},
+  {code:"81-593",name:"Team Canada 2025 Champions",soh:0},
+  {code:"81-594",name:"Ovechkin All Timing Scorer",soh:2},
+  {code:"81-597",name:"Connor McDavid Trophy Collage",soh:0},
+  {code:"81-605",name:"Edmonton Oilers Back to Back Conference Champs",soh:0},
+  {code:"81-609",name:"Original 6 Classic Arenas",soh:4},
+  {code:"81-611",name:"Edmonton Oilers Players Collage 25-26",soh:4},
+  {code:"81-615",name:"Team Canada Greatest Moments",soh:2},
+];
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let orders = [];
 let extracted = null;
 let editItems = [];
-let cfg = { apiKey: '' };
+let activeCompany = 'earth'; // 'earth' or 'funding'
+
+const COMPANY = {
+  earth: {
+    name: 'Earth Distributors',
+    short: 'EARTH',
+    collection: 'orders_earth',
+    opening: OPENING_EARTH,
+    unit: 'cases',
+    unitCap: 'Cases',
+    openingDate: 'May 1, 2026',
+    color: 'var(--green)',
+    logoClass: '',
+    pillClass: 'co-pill-earth',
+    promptExtra: `Determine INBOUND vs OUTBOUND:
+- If "Ship To" contains "West Direct" OR "333 28 Street NE" OR "Earth Distributors c/o West Direct" → INBOUND
+- Otherwise → OUTBOUND
+Extract items as {productId, description, cases} where cases is integer quantity (number of cases).`
+  },
+  funding: {
+    name: 'Funding Innovations',
+    short: 'FUNDING',
+    collection: 'orders_funding',
+    opening: OPENING_FUNDING,
+    unit: 'pieces',
+    unitCap: 'Pieces',
+    openingDate: 'May 1, 2026',
+    color: 'var(--blue)',
+    logoClass: 'funding',
+    pillClass: 'co-pill-funding',
+    promptExtra: `Determine INBOUND vs OUTBOUND:
+- INBOUND = stock arriving at Funding Innovations warehouse (purchase orders, supplier invoices TO Funding)
+- OUTBOUND = stock leaving the warehouse (sales invoices, delivery orders FROM Funding)
+Extract items as {productId, description, cases} where cases is integer quantity (number of pieces/prints).
+productId = the print number (e.g. 17-230, 50-341, 81-609).
+Also extract deliveryNotes: scan the invoice Notes section for any of the following and include verbatim:
+- "ok at door" or "leave at door" instructions
+- Call ahead / call before delivery requests
+- Specific delivery windows or times
+- Access codes or special instructions
+- DO NOT DELIVER flags
+If no notes found, return deliveryNotes as empty string.`
+  }
+};
+
+// ── Company switch ────────────────────────────────────────────────────────────
+function switchCompany(co) {
+  activeCompany = co;
+  const c = COMPANY[co];
+
+  // Update buttons
+  document.getElementById('co-earth').className = 'co-btn' + (co==='earth' ? ' active-earth' : '');
+  document.getElementById('co-funding').className = 'co-btn' + (co==='funding' ? ' active-funding' : '');
+
+  // Update pill
+  const pill = document.getElementById('co-pill');
+  pill.textContent = c.name.toUpperCase();
+  pill.className = 'co-pill ' + c.pillClass;
+
+  // Update logo & sub
+  document.getElementById('logo-co').textContent = co === 'earth' ? 'WDEC' : 'FI';
+  document.getElementById('logo-co').className = c.logoClass;
+  document.getElementById('sub').textContent = c.name + ' · Inventory Tracker';
+
+  // Update tabs active color
+  document.querySelectorAll('.tab.active').forEach(t => {
+    t.classList.toggle('funding', co === 'funding');
+  });
+
+  // Update upload zone color
+  const dz = document.getElementById('drop-zone');
+  dz.classList.toggle('funding', co === 'funding');
+
+  // Update unit labels
+  document.getElementById('s-units-lbl').textContent = c.unitCap + ' On Hand';
+  document.getElementById('s-units-sub').textContent = 'current total';
+  document.getElementById('rev-qty-hdr').textContent = c.unitCap;
+  document.getElementById('inv-open-hdr').textContent = 'Opening ' + c.openingDate;
+  document.getElementById('inv-hand-hdr').textContent = 'On Hand';
+
+  // Update confirm button style
+  const cb = document.getElementById('confirm-btn');
+  cb.classList.toggle('funding', co === 'funding');
+
+  // Header date
+  document.getElementById('header-date').innerHTML =
+    '<div>' + new Date().toISOString().slice(0,10) + '</div>' +
+    '<div style="color:' + c.color + '">Opening: ' + c.openingDate + '</div>';
+
+  // Reload data for this company
+  loadData();
+  resetUpload();
+}
 
 // ── Config ────────────────────────────────────────────────────────────────────
-function loadConfig() {
-  try { cfg = JSON.parse(localStorage.getItem('wdec_cfg') || '{}'); } catch {}
-  if (cfg.apiKey) document.getElementById('cfg-api-key').value = cfg.apiKey;
-}
-function saveConfig() {
-  cfg.apiKey = document.getElementById('cfg-api-key').value.trim();
-  localStorage.setItem('wdec_cfg', JSON.stringify(cfg));
-  document.getElementById('cfg-msg').textContent = 'Saved.';
-  setTimeout(() => document.getElementById('cfg-msg').textContent = '', 2000);
-}
 function toggleConfig() {
   document.getElementById('config-panel').classList.toggle('open');
 }
 
 // ── Firebase data ─────────────────────────────────────────────────────────────
 async function loadData() {
-  setSyncStatus('', 'Loading from Firebase…');
+  const col = COMPANY[activeCompany].collection;
+  setSyncStatus('', 'Loading ' + COMPANY[activeCompany].name + '…');
   try {
-    orders = await window._fbLoadOrders();
-    setSyncStatus('ok', 'Connected to Firebase — ' + orders.length + ' orders loaded');
+    orders = await window._fbLoadOrders(col);
+    setSyncStatus('ok', COMPANY[activeCompany].name + ' — ' + orders.length + ' orders loaded');
     renderAll();
   } catch(e) {
     setSyncStatus('err', 'Firebase error: ' + e.message);
   }
 }
 
-async function saveData(order) {
+async function saveOrder(order) {
+  const col = COMPANY[activeCompany].collection;
   try {
     setSyncStatus('', 'Saving…');
-    await window._fbAddOrder(order);
+    await window._fbAddOrder(order, col);
     setSyncStatus('ok', 'Saved to Firebase');
   } catch(e) {
     setSyncStatus('err', 'Save failed: ' + e.message);
@@ -526,8 +1061,9 @@ function setSyncStatus(state, msg) {
 
 // ── Inventory calculation ─────────────────────────────────────────────────────
 function computeInventory() {
+  const opening = COMPANY[activeCompany].opening;
   const inv = {};
-  OPENING.forEach(p => { inv[p.code] = { ...p, current: p.soh, totalIn: 0, totalOut: 0 }; });
+  opening.forEach(p => { inv[p.code] = { ...p, current: p.soh, totalIn: 0, totalOut: 0 }; });
   [...orders].sort((a,b) => a.date.localeCompare(b.date)).forEach(order => {
     order.items.forEach(item => {
       const k = item.productId;
@@ -543,28 +1079,28 @@ function computeInventory() {
 const WORKER_URL = 'https://wdec-proxye.jannemanwdx.workers.dev/';
 
 async function extractPdf(b64) {
-  const prompt = `Extract data from this Earth Distributors warehouse document.
+  const c = COMPANY[activeCompany];
+  const prompt = `Extract data from this ${c.name} warehouse document.
 
-Determine INBOUND vs OUTBOUND:
-- If "Ship To" contains "West Direct" OR "333 28 Street NE" OR "Earth Distributors c/o West Direct" → INBOUND
-- Otherwise → OUTBOUND
+${c.promptExtra}
 
-Extract:
+Also extract:
 1. type: "INBOUND" or "OUTBOUND"
-2. salesOrderNumber: the SO or PO number (digits only)
-3. date: Ship Date as YYYY-MM-DD
-4. shipTo: the Ship To company name
-5. items: array of {productId, description, cases} where cases is integer quantity
+2. salesOrderNumber: the SO, PO, or invoice number
+3. date: date as YYYY-MM-DD
+4. shipTo: the Ship To or customer name
 
-Return ONLY valid JSON, no markdown fences:
-{"type":"OUTBOUND","salesOrderNumber":"032514","date":"2026-05-01","shipTo":"Nicks Steak House","items":[{"productId":"HP-BAG-9CLM6-C","description":"Sugarcane Clamshell 9x6x3 200/cs","cases":6}]}`;
+Return ONLY valid JSON, no markdown fences. For Funding Innovations include deliveryNotes field:
+{"type":"OUTBOUND","salesOrderNumber":"FI-001234","date":"2026-05-01","shipTo":"Customer Name","deliveryNotes":"ok at door","items":[{"productId":"17-230","description":"Coastal Scene","cases":1}]}
+For Earth Distributors:
+{"type":"OUTBOUND","salesOrderNumber":"032514","date":"2026-05-01","shipTo":"Customer Name","items":[{"productId":"HP-BAG-9CLM6-C","description":"Sugarcane Clamshell 9x6x3","cases":6}]}`;
 
   const res = await fetch(WORKER_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 1500,
+      max_tokens: 2000,
       messages: [{ role: 'user', content: [
         { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
         { type: 'text', text: prompt }
@@ -601,7 +1137,7 @@ async function handleFile(file) {
     showUploadState('review');
   } catch(e) {
     showUploadState('error');
-    document.getElementById('upload-err-msg').textContent = e.message || 'Could not extract data. Check your API key and try again.';
+    document.getElementById('upload-err-msg').textContent = e.message || 'Could not extract data. Try again.';
   }
 }
 
@@ -621,13 +1157,22 @@ function renderReview() {
   document.getElementById('rev-so').textContent = 'SO# ' + extracted.salesOrderNumber;
   document.getElementById('rev-meta').textContent = extracted.date + ' · ' + extracted.shipTo;
   document.getElementById('rev-direction').textContent = extracted.type === 'INBOUND' ? 'Stock coming IN' : 'Stock going OUT';
+
+  // Show delivery notes field for Funding Innovations
+  const notesWrap = document.getElementById('rev-notes-wrap');
+  if (activeCompany === 'funding') {
+    notesWrap.style.display = 'block';
+    document.getElementById('rev-notes').value = extracted.deliveryNotes || '';
+  } else {
+    notesWrap.style.display = 'none';
+  }
   renderReviewItems();
 }
 
 function renderReviewItems() {
   document.getElementById('rev-tbody').innerHTML = editItems.map((it,i) => `
     <tr>
-      <td><input class="review-inp" style="width:140px" value="${esc(it.productId)}" onchange="editItems[${i}].productId=this.value" /></td>
+      <td><input class="review-inp" style="width:130px" value="${esc(it.productId)}" onchange="editItems[${i}].productId=this.value" /></td>
       <td><input class="review-inp w-full" value="${esc(it.description)}" onchange="editItems[${i}].description=this.value" /></td>
       <td><input class="review-inp w-cases" type="number" value="${it.cases}" onchange="editItems[${i}].cases=parseInt(this.value)||0" /></td>
       <td><button class="btn-danger" onclick="removeReviewLine(${i})">✕</button></td>
@@ -638,9 +1183,14 @@ function removeReviewLine(i) { editItems.splice(i,1); renderReviewItems(); }
 function addReviewLine() { editItems.push({productId:'',description:'',cases:0}); renderReviewItems(); }
 
 async function confirmOrder() {
-  const order = { ...extracted, items: [...editItems], id: Date.now().toString() };
+  // Capture any edited delivery notes
+  const notesEl = document.getElementById('rev-notes');
+  if (activeCompany === 'funding' && notesEl) {
+    extracted.deliveryNotes = notesEl.value;
+  }
+  const order = { ...extracted, items: [...editItems], id: Date.now().toString(), company: activeCompany };
   try {
-    await saveData(order);
+    await saveOrder(order);
     orders.unshift(order);
     renderAll();
     showUploadState('done');
@@ -656,6 +1206,7 @@ function renderAll() { renderDashboard(); renderInventory(); renderHistory(); }
 function renderDashboard() {
   const inv = computeInventory();
   const vals = Object.values(inv);
+  const c = COMPANY[activeCompany];
   document.getElementById('s-skus').textContent = vals.length;
   document.getElementById('s-cases').textContent = vals.reduce((s,p) => s + Math.max(0,p.current), 0);
   document.getElementById('s-in').textContent = orders.filter(o=>o.type==='INBOUND').length;
@@ -663,7 +1214,7 @@ function renderDashboard() {
   const recent = [...orders].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8);
   document.getElementById('dash-orders').innerHTML = recent.length ? `
     <table><thead><tr><th>Date</th><th>SO#</th><th>Type</th><th>Lines</th></tr></thead><tbody>
-    ${recent.map(o=>`<tr><td class="text-muted">${o.date}</td><td>${o.salesOrderNumber}</td><td><span class="${o.type==='INBOUND'?'badge-in':'badge-out'}">${o.type}</span></td><td class="text-muted">${o.items.length}</td></tr>`).join('')}
+    ${recent.map(o=>`<tr><td class="text-muted">${o.date}</td><td>${esc(o.salesOrderNumber)}</td><td><span class="${o.type==='INBOUND'?'badge-in':'badge-out'}">${o.type}</span></td><td class="text-muted">${o.items.length}</td></tr>`).join('')}
     </tbody></table>` : '<span class="text-dim" style="font-size:13px">No orders yet.</span>';
   renderDashSearch();
 }
@@ -671,11 +1222,12 @@ function renderDashboard() {
 function renderDashSearch() {
   const inv = computeInventory();
   const q = document.getElementById('dash-search').value.toLowerCase();
+  const accentColor = activeCompany === 'funding' ? 'var(--blue)' : 'var(--green)';
   const list = Object.values(inv).filter(p => !q || p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q)).slice(0,15);
   document.getElementById('dash-inv-list').innerHTML = list.map(p=>`
     <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e2130;font-size:12px">
       <div>
-        <div class="text-green" style="font-weight:500">${p.code}</div>
+        <div style="font-weight:500;color:${accentColor}">${p.code}</div>
         <div class="text-muted" style="font-size:11px">${p.name.slice(0,58)}${p.name.length>58?'…':''}</div>
       </div>
       <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:${p.current<0?'var(--red)':'var(--text)'};min-width:36px;text-align:right">${p.current}</div>
@@ -685,12 +1237,13 @@ function renderDashSearch() {
 function renderInventory() {
   const inv = computeInventory();
   const q = document.getElementById('inv-search').value.toLowerCase();
+  const accentColor = activeCompany === 'funding' ? 'var(--blue)' : 'var(--green)';
   const list = Object.values(inv).sort((a,b)=>a.code.localeCompare(b.code))
     .filter(p => !q || p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
   document.getElementById('inv-count').textContent = list.length + ' SKUs';
   document.getElementById('inv-tbody').innerHTML = list.map(p=>`
     <tr>
-      <td class="text-green" style="font-weight:500;white-space:nowrap">${p.code}</td>
+      <td style="font-weight:500;white-space:nowrap;color:${accentColor}">${p.code}</td>
       <td class="text-muted" style="font-size:11px;max-width:380px">${p.name}</td>
       <td class="ta-r text-muted">${p.soh}</td>
       <td class="ta-r" style="color:var(--green)">${p.totalIn>0?'+'+p.totalIn:'–'}</td>
@@ -709,20 +1262,26 @@ function renderHistory() {
     if (to   && o.date > to)   return false;
     return true;
   }).sort((a,b)=>b.date.localeCompare(a.date));
+  const c = COMPANY[activeCompany];
   document.getElementById('hist-count').textContent = filtered.length + ' orders';
-  document.getElementById('hist-list').innerHTML = filtered.length ? filtered.map(o=>`
+  document.getElementById('hist-list').innerHTML = filtered.length ? filtered.map((o,idx)=>`
     <div class="card-sm">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
         <div class="flex">
           <span class="${o.type==='INBOUND'?'badge-in':'badge-out'}">${o.type}</span>
-          <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px">SO# ${o.salesOrderNumber}</span>
+          <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px">SO# ${esc(o.salesOrderNumber)}</span>
         </div>
-        <div class="text-muted" style="font-size:12px">${o.date} · ${esc(o.shipTo)}</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div class="text-muted" style="font-size:12px">${o.date} · ${esc(o.shipTo)}</div>
+          ${o.type==='OUTBOUND' ? `<button class="btn-ghost btn-sm" style="font-size:10px;padding:4px 10px" onclick="exportOrder(filteredOrders[${idx}])">&#8595; Import File</button>` : ''}
+        </div>
       </div>
-      <table><thead><tr><th>Product ID</th><th>Description</th><th class="ta-r">Cases</th></tr></thead><tbody>
-      ${o.items.map(it=>`<tr><td class="text-green" style="font-size:12px;white-space:nowrap">${esc(it.productId)}</td><td class="text-muted" style="font-size:11px">${esc(it.description)}</td><td class="ta-r" style="font-weight:500">${it.cases}</td></tr>`).join('')}
+      ${activeCompany==='funding' && o.deliveryNotes ? `<div style="background:#1a2a30;border:1px solid var(--blue-border);border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:11px"><span style="color:var(--blue);letter-spacing:.1em;text-transform:uppercase;font-size:10px">Delivery Notes</span><div style="color:var(--text);margin-top:4px">${esc(o.deliveryNotes)}</div></div>` : ''}
+      <table><thead><tr><th>Product ID</th><th>Description</th><th class="ta-r">${c.unitCap}</th></tr></thead><tbody>
+      ${o.items.map(it=>`<tr><td style="font-size:12px;white-space:nowrap;color:${c.color}">${esc(it.productId)}</td><td class="text-muted" style="font-size:11px">${esc(it.description)}</td><td class="ta-r" style="font-weight:500">${it.cases}</td></tr>`).join('')}
       </tbody></table>
     </div>`).join('') : '<div class="text-dim" style="font-size:13px">No orders match the current filter.</div>';
+  window.filteredOrders = filtered;
 }
 
 function clearHistFilter() {
@@ -737,6 +1296,7 @@ function renderSearch() {
   const q = document.getElementById('srch-input').value.toLowerCase().trim();
   const field = document.getElementById('srch-field').value;
   const el = document.getElementById('srch-results');
+  const c = COMPANY[activeCompany];
   if (!q) { el.innerHTML = '<div class="text-dim" style="font-size:13px">Enter a search term above.</div>'; return; }
   const matchProds = (field==='all'||field==='product')
     ? Object.values(inv).filter(p=>p.code.toLowerCase().includes(q)||p.name.toLowerCase().includes(q)) : [];
@@ -746,18 +1306,18 @@ function renderSearch() {
   if (matchProds.length) {
     html += `<div class="label mb12">Products (${matchProds.length})</div>
     <div class="card mb20" style="padding:0"><table><thead><tr><th>Code</th><th>Description</th><th class="ta-r">On Hand</th></tr></thead><tbody>
-    ${matchProds.map(p=>`<tr><td class="text-green" style="font-weight:500">${p.code}</td><td class="text-muted" style="font-size:11px">${p.name}</td><td class="ta-r" style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:${p.current<0?'var(--red)':'var(--text)'}">${p.current}</td></tr>`).join('')}
+    ${matchProds.map(p=>`<tr><td style="font-weight:500;color:${c.color}">${p.code}</td><td class="text-muted" style="font-size:11px">${p.name}</td><td class="ta-r" style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:${p.current<0?'var(--red)':'var(--text)'}">${p.current}</td></tr>`).join('')}
     </tbody></table></div>`;
   }
   if (matchOrders.length) {
     html += `<div class="label mb12">Orders (${matchOrders.length})</div><div class="stacks">
     ${matchOrders.map(o=>`<div class="card-sm"><div class="flex mb10">
       <span class="${o.type==='INBOUND'?'badge-in':'badge-out'}">${o.type}</span>
-      <span style="font-family:'Syne',sans-serif;font-weight:700">SO# ${o.salesOrderNumber}</span>
+      <span style="font-family:'Syne',sans-serif;font-weight:700">SO# ${esc(o.salesOrderNumber)}</span>
       <span class="text-muted" style="font-size:12px">${o.date} · ${esc(o.shipTo)}</span>
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px">
-      ${o.items.map(it=>`<div class="tag"><span class="text-green">${esc(it.productId)}</span><span class="text-muted">×</span><span>${it.cases}</span></div>`).join('')}
+      ${o.items.map(it=>`<div class="tag"><span style="color:${c.color}">${esc(it.productId)}</span><span class="text-muted">×</span><span>${it.cases}</span></div>`).join('')}
     </div></div>`).join('')}
     </div>`;
   }
@@ -768,9 +1328,12 @@ function renderSearch() {
 // ── Tab navigation ────────────────────────────────────────────────────────────
 function showTab(id, evt) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active','funding'));
   document.getElementById('page-' + id).classList.add('active');
-  if (evt && evt.target) evt.target.classList.add('active');
+  if (evt && evt.target) {
+    evt.target.classList.add('active');
+    if (activeCompany === 'funding') evt.target.classList.add('funding');
+  }
   if (id==='inventory') renderInventory();
   if (id==='history') renderHistory();
   if (id==='search') document.getElementById('srch-input').focus();
@@ -780,14 +1343,141 @@ function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+
+// ── Export to Import File ─────────────────────────────────────────────────────
+
+const LATTICE_FIELDS = ['account','ShipAddressID','CCompanyName','Csuite','Caddress','Ccity','Cprov','cPostal','cContactName','CContactPhone','readyDate','readyTime','dueTime','pieces','weight','description','service','reference','instructions','emailNotification','sigReq','baseRate','pickDriver','sortID','POD'];
+const LEGACY_FIELDS  = ['account','shipaddressID','con_name','con_suite','con_address','con_quad','con_city','con_postal','Latitude','Longitude','cust_ref','del_inst','pieces','weight','desc','ser_area','ser_time','call_in','dct','rate','del_time','POD','driv1','in_date','core_in','emailNotification','contact_name','contact_phone','sigReq'];
+
+function makeOrderedRow(fields, data) {
+  const row = {};
+  fields.forEach(f => { row[f] = data[f] !== undefined ? data[f] : ''; });
+  return row;
+}
+
+function exportOrder(order) {
+  if (activeCompany === 'funding') exportFundingOrder(order);
+  else exportEarthOrder(order);
+}
+
+function exportFundingOrder(order) {
+  const today = new Date().toISOString().slice(0,10);
+  const dateStr = today.replace(/-/g,'');
+  const row = makeOrderedRow(LATTICE_FIELDS, {
+    account:          '300001',
+    ShipAddressID:    '2696421',
+    CCompanyName:     order.shipTo || '',
+    Csuite:           '',
+    Caddress:         '',
+    Ccity:            '',
+    Cprov:            'AB',
+    cPostal:          '',
+    cContactName:     '',
+    CContactPhone:    '',
+    readyDate:        today,
+    readyTime:        '08:00',
+    dueTime:          '17:00',
+    pieces:           1,
+    weight:           15,
+    description:      'Fragile Picture Frame / Glass',
+    service:          'picture',
+    reference:        order.salesOrderNumber,
+    instructions:     order.deliveryNotes || '',
+    emailNotification:'',
+    sigReq:           '',
+    baseRate:         '',
+    pickDriver:       999,
+    sortID:           '',
+    POD:              ''
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet([row], { header: LATTICE_FIELDS });
+  // Mark text fields
+  ['account','ShipAddressID','cPostal','reference'].forEach(f => {
+    const ci = LATTICE_FIELDS.indexOf(f);
+    if (ci >= 0) {
+      const cellRef = XLSX.utils.encode_cell({r:1, c:ci});
+      if (ws[cellRef]) ws[cellRef].z = '@';
+    }
+  });
+  ws['!cols'] = LATTICE_FIELDS.map(() => ({wch:18}));
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+  XLSX.writeFile(wb, 'FundingInnovation_' + dateStr + '.xlsx');
+}
+
+function exportEarthOrder(order) {
+  const today = new Date().toISOString().slice(0,10);
+  const dateStr = today.replace(/-/g,'');
+  const totalCases = order.items.reduce((s,i) => s + (parseInt(i.cases)||0), 0);
+  const desc = order.items.map(i => i.productId).filter(Boolean).join(', ');
+
+  const shared = {
+    con_name:          order.shipTo || '',
+    con_suite:         '',
+    con_address:       '',
+    con_quad:          '',
+    con_city:          '',
+    con_postal:        '',
+    Latitude:          '',
+    Longitude:         '',
+    cust_ref:          order.salesOrderNumber,
+    del_inst:          order.salesOrderNumber,
+    pieces:            totalCases,
+    weight:            '',
+    desc:              desc,
+    call_in:           '',
+    dct:               '',
+    rate:              '',
+    del_time:          '',
+    POD:               '',
+    driv1:             '',
+    in_date:           today,
+    core_in:           '',
+    emailNotification: '',
+    contact_name:      '',
+    contact_phone:     '',
+    sigReq:            ''
+  };
+
+  const deliveryRow = makeOrderedRow(LEGACY_FIELDS, {
+    account:       '313530',
+    shipaddressID: '2387750',
+    ser_area:      'O',
+    ser_time:      180,
+    ...shared
+  });
+
+  const pickpackRow = makeOrderedRow(LEGACY_FIELDS, {
+    account:       '313531',
+    shipaddressID: '2387751',
+    ser_area:      'O',
+    ser_time:      250,
+    ...shared
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet([deliveryRow, pickpackRow], { header: LEGACY_FIELDS });
+  // Mark text fields
+  ['account','shipaddressID','con_postal','cust_ref'].forEach(f => {
+    const ci = LEGACY_FIELDS.indexOf(f);
+    if (ci >= 0) {
+      [1,2].forEach(r => {
+        const cellRef = XLSX.utils.encode_cell({r, c:ci});
+        if (ws[cellRef]) ws[cellRef].z = '@';
+      });
+    }
+  });
+  ws['!cols'] = LEGACY_FIELDS.map(() => ({wch:16}));
+  XLSX.utils.book_append_sheet(wb, ws, 'Worksheet');
+  XLSX.writeFile(wb, 'EarthDistributors_' + dateStr + '.xlsx');
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.getElementById('header-date').innerHTML =
   '<div>' + new Date().toISOString().slice(0,10) + '</div>' +
-  '<div style="color:#3a5a40">Opening: May 1, 2026</div>';
-loadConfig();
+  '<div style="color:var(--green)">Opening: May 1, 2026</div>';
 showUploadState('idle');
-
-// Wait for Firebase module to initialize then load data
 setTimeout(loadData, 800);
 </script>
 </body>
