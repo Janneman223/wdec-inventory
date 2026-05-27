@@ -188,6 +188,7 @@ tr:hover td{background:rgba(0,200,212,.03)}
     <button class="tab" onclick="showTab('inventory',event)">Inventory</button>
     <button class="tab" onclick="showTab('history',event)">Order History</button>
     <button class="tab" onclick="showTab('search',event)">Search</button>
+    <button class="tab" onclick="showTab('alerts',event)">Stock Alerts</button>
     <div style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text-dim)" id="header-date"></div>
 </div>
 
@@ -1280,7 +1281,7 @@ async function confirmOrder() {
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
-function renderAll() { renderDashboard(); renderInventory(); renderHistory(); }
+function renderAll() { renderDashboard(); renderInventory(); renderHistory(); renderAlerts(); }
 
 function renderDashboard() {
   const inv = computeInventory();
@@ -1405,6 +1406,44 @@ function renderSearch() {
 }
 
 // ── Tab navigation ────────────────────────────────────────────────────────────
+function renderAlerts() {
+  const inv = computeInventory();
+  const filter = document.getElementById('alert-filter').value;
+  const accentColor = activeCompany === 'funding' ? 'var(--cyan)' : 'var(--green)';
+  const all = Object.values(inv).sort((a,b) => a.code.localeCompare(b.code));
+
+  const zeroItems  = all.filter(p => p.current === 0);
+  const negItems   = all.filter(p => p.current < 0);
+
+  // visibility based on filter
+  document.getElementById('alerts-zero').style.display = (filter === 'negative') ? 'none' : '';
+  document.getElementById('alerts-neg').style.display  = (filter === 'zero')     ? 'none' : '';
+
+  const rowHtml = (p, color) => `
+    <tr>
+      <td style="font-family:var(--mono);font-weight:600;white-space:nowrap;color:${accentColor}">${p.code}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text-dim);max-width:380px">${p.name}</td>
+      <td class="ta-r" style="font-family:var(--mono);font-size:11px;color:var(--text-dim)">${p.soh}</td>
+      <td class="ta-r" style="font-family:var(--mono);font-size:11px;color:var(--green)">${p.totalIn > 0 ? '+' + p.totalIn : '–'}</td>
+      <td class="ta-r" style="font-family:var(--mono);font-size:11px;color:var(--red)">${p.totalOut > 0 ? '-' + p.totalOut : '–'}</td>
+      <td class="ta-r" style="font-family:var(--mono);font-weight:700;font-size:15px;color:${color}">${p.current}</td>
+    </tr>`;
+
+  document.getElementById('alerts-zero-tbody').innerHTML =
+    zeroItems.length ? zeroItems.map(p => rowHtml(p, 'var(--yellow)')).join('') :
+    '<tr><td colspan="6" style="text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-dim);padding:20px">No SKUs with zero stock</td></tr>';
+
+  document.getElementById('alerts-neg-tbody').innerHTML =
+    negItems.length ? negItems.map(p => rowHtml(p, 'var(--red)')).join('') :
+    '<tr><td colspan="6" style="text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-dim);padding:20px">No SKUs with negative stock</td></tr>';
+
+  document.getElementById('zero-count').textContent = `Zero Stock — ${zeroItems.length} SKUs`;
+  document.getElementById('neg-count').textContent  = `Negative Stock — ${negItems.length} SKUs`;
+
+  const shown = filter === 'zero' ? zeroItems.length : filter === 'negative' ? negItems.length : zeroItems.length + negItems.length;
+  document.getElementById('alert-count').textContent = `${shown} SKU${shown !== 1 ? 's' : ''} flagged`;
+}
+
 function showTab(id, evt) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active','funding'));
@@ -1414,6 +1453,7 @@ function showTab(id, evt) {
     if (activeCompany === 'funding') evt.target.classList.add('funding');
   }
   if (id==='inventory') renderInventory();
+  if (id==='alerts') renderAlerts();
   if (id==='history') renderHistory();
   if (id==='search') document.getElementById('srch-input').focus();
 }
