@@ -287,6 +287,13 @@ tr:hover td{background:rgba(0,200,212,.03)}
   <div id="page-inventory" class="page">
     <div class="flex mb20" style="gap:12px">
       <input style="max-width:340px" id="inv-search" placeholder="Filter by code or name…" oninput="renderInventory()" />
+      <select id="inv-stock-filter" onchange="renderInventory()" style="font-family:var(--mono);font-size:11px;background:#080c10;border:1px solid var(--border2);color:var(--text);padding:6px 10px;border-radius:3px">
+        <option value="all">All Stock Levels</option>
+        <option value="positive">Positive Only</option>
+        <option value="zero">Zero Stock</option>
+        <option value="negative">Negative Stock</option>
+        <option value="zero-neg">Zero &amp; Negative</option>
+      </select>
       <div class="text-muted" style="font-size:11px;margin-left:auto" id="inv-count"></div>
     </div>
     <div class="tbl-wrap">
@@ -1317,9 +1324,17 @@ function renderDashSearch() {
 function renderInventory() {
   const inv = computeInventory();
   const q = document.getElementById('inv-search').value.toLowerCase();
+  const sf = document.getElementById('inv-stock-filter').value;
   const accentColor = activeCompany === 'funding' ? 'var(--cyan)' : 'var(--green)';
   const list = Object.values(inv).sort((a,b)=>a.code.localeCompare(b.code))
-    .filter(p => !q || p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
+    .filter(p => {
+      if (q && !p.code.toLowerCase().includes(q) && !p.name.toLowerCase().includes(q)) return false;
+      if (sf === 'positive')  return p.current > 0;
+      if (sf === 'zero')      return p.current === 0;
+      if (sf === 'negative')  return p.current < 0;
+      if (sf === 'zero-neg')  return p.current <= 0;
+      return true;
+    });
   document.getElementById('inv-count').textContent = list.length + ' SKUs';
   document.getElementById('inv-tbody').innerHTML = list.map(p=>`
     <tr>
